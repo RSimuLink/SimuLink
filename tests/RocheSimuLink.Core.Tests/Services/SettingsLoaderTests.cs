@@ -29,9 +29,7 @@ public class SettingsLoaderTests
     {
         var settings = SettingsLoader.Load();
 
-        // The HIM parser extracts target identifiers but not their result-code
-        // tables, so observation values may be empty; what must always hold is
-        // that values and interpretation codes stay paired one-to-one.
+        // Values and interpretation codes are always paired one-to-one.
         foreach (var test in settings.TestTypes)
         {
             foreach (var target in test.Targets)
@@ -39,6 +37,18 @@ public class SettingsLoaderTests
                 Assert.Equal(target.ObservationValues.Count, target.InterpretationCodes.Count);
             }
         }
+    }
+
+    [Fact]
+    public void Load_TargetsCarryResultValuesFromTheManual()
+    {
+        var settings = SettingsLoader.Load();
+
+        // The bundled HIM yields OBX-5 result codes for most targets, so the
+        // result dropdown is populated out of the box rather than empty.
+        var targets = settings.TestTypes.SelectMany(t => t.Targets).ToList();
+        Assert.NotEmpty(targets);
+        Assert.Contains(targets, t => t.ObservationValues.Count > 0);
     }
 
     [Fact]

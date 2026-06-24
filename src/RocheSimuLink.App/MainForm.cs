@@ -55,19 +55,17 @@ public partial class MainForm : Form
 
     private void cmbTestType_SelectedIndexChanged(object? sender, EventArgs e)
     {
-        if (cmbTestType.SelectedItem is TestType test && test.AllowedVolumes.Count > 0)
-        {
-            cmbSampleVolume.DataSource = test.AllowedVolumes;
-        }
+        var test = cmbTestType.SelectedItem as TestType;
+        cmbSampleVolume.DataSource =
+            ResultEntryPresenter.VolumesFor(test, _settings.SampleVolumes).ToList();
 
         PopulateResults();
     }
 
     private void PopulateResults()
     {
-        cmbResult.DataSource = cmbTestType.SelectedItem is TestType test && test.Targets.Count > 0
-            ? test.Targets[0].ObservationValues.ToList()
-            : new List<string>();
+        var test = cmbTestType.SelectedItem as TestType;
+        cmbResult.DataSource = ResultEntryPresenter.ResultValuesFor(test).ToList();
     }
 
     // --- Connection ---------------------------------------------------------
@@ -140,9 +138,9 @@ public partial class MainForm : Form
             return;
         }
 
-        if (cmbTestType.SelectedItem is not TestType test ||
-            cmbSampleType.SelectedItem is not SampleType sampleType ||
-            test.Targets.Count == 0)
+        var test = cmbTestType.SelectedItem as TestType;
+        var sampleType = cmbSampleType.SelectedItem as SampleType;
+        if (!ResultEntryPresenter.CanSend(test, sampleType))
         {
             MessageBox.Show("Please complete the result fields.", "Missing data",
                 MessageBoxButtons.OK, MessageBoxIcon.Information);
@@ -150,14 +148,14 @@ public partial class MainForm : Form
         }
 
         var sampleId = txtSampleId.Text.Trim();
-        var target = test.Targets[0];
-        var value = cmbResult.SelectedItem?.ToString()
-            ?? target.ObservationValues.FirstOrDefault() ?? "N/A";
+        var target = test!.Targets[0];
+        var value = ResultEntryPresenter.EffectiveResultValue(
+            test, cmbResult.SelectedItem?.ToString());
         var flag = SelectedFlag();
         var status = (ResultStatus)(cmbResultStatus.SelectedItem ?? ResultStatus.Final);
 
         var resultMessage = LawResultMessageFactory.Create(
-            sampleId, sampleType, test, target, value, flag, status, _settings.Connection);
+            sampleId, sampleType!, test, target, value, flag, status, _settings.Connection);
         var message = LawOulR22Builder.Build(resultMessage);
 
         try
@@ -165,7 +163,7 @@ public partial class MainForm : Form
             var ack = await _connection.SendResultAsync(message.RawMessage);
             _log.Success(
                 $"Test results sent to LIS: Sample ID {sampleId}, Result: {test.Name} {value}, " +
-                $"{sampleType.DisplayName}, {cmbSampleVolume.SelectedItem}");
+                $"{sampleType!.DisplayName}, {cmbSampleVolume.SelectedItem}");
             _ = ack; // ACK already implies success; surface details if needed later.
         }
         catch (Exception ex)
@@ -174,13 +172,9 @@ public partial class MainForm : Form
         }
     }
 
-    private ResultFlag SelectedFlag()
-    {
-        if (chkCritical.Checked) return ResultFlag.Critical;
-        if (chkHigh.Checked) return ResultFlag.High;
-        if (chkLow.Checked) return ResultFlag.Low;
-        return ResultFlag.Normal;
-    }
+    private ResultFlag SelectedFlag() =>
+        ResultEntryPresenter.ResolveFlag(
+            chkCritical.Checked, chkHigh.Checked, chkLow.Checked);
 
     // --- Receiving orders ---------------------------------------------------
 

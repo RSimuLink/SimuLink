@@ -36,6 +36,29 @@ namespace RocheSimuLink.Him
         [GeneratedRegex(@"([A-Za-z0-9\-]+)\^([A-Za-z0-9 /+.]+?)\^99ROC")]
         private static partial Regex VendorCodeRegex();
 
+        // A standalone OBX-5 result-code token from the assay's result-code
+        // table. The manual uses a closed vocabulary, so matching it directly is
+        // far more robust than reconstructing PdfPig's reordered table cells.
+        [GeneratedRegex(@"(?<![A-Za-z0-9])(POS|NEG|RR|NR|VAL|AT|BT|ND)(?![A-Za-z0-9])")]
+        private static partial Regex ResultCodeRegex();
+
+        // Canonical OBX-8-1 interpretation text for each OBX-5 result code, used
+        // to pair every parsed value with an interpretation of equal count. The
+        // manual's wording is collapsed by PdfPig, so these fixed descriptions
+        // are used rather than scraping the (garbled) text column.
+        private static readonly IReadOnlyDictionary<string, string> ResultInterpretations =
+            new Dictionary<string, string>(StringComparer.Ordinal)
+            {
+                ["POS"] = "Positive",
+                ["NEG"] = "Negative",
+                ["RR"] = "Reactive",
+                ["NR"] = "Non-Reactive",
+                ["VAL"] = "Valid",
+                ["AT"] = "Above Titer",
+                ["BT"] = "Below Titer",
+                ["ND"] = "Not Detected",
+            };
+
         // The MSH-9 message-type triple in an example message.
         [GeneratedRegex(@"MSH\|\^~\\&\|.*?\|\|([A-Z]{3})\^([A-Z0-9]{2,4})\^([A-Z0-9_]+)\|")]
         private static partial Regex MessageTypeRegex();
@@ -238,6 +261,7 @@ namespace RocheSimuLink.Him
                 assay.SampleTypes = ParseSampleTypes(block);
                 assay.Tests = ParseTests(block);
                 assay.Targets = ParseTargets(block);
+                ApplyResultCodes(assay, block);
 
                 yield return assay;
             }
@@ -316,6 +340,69 @@ namespace RocheSimuLink.Him
             }
 
             return result;
+        }
+
+        /// <summary>
+        /// Fills each target's OBX-5 result values (and their paired OBX-8-1
+        /// interpretations) from the assay's "Sample result codes for OBX
+        /// segment" table. The manual lists one shared result-code set per
+        /// assay, so every target receives the same values.
+        /// </summary>
+        private static void ApplyResultCodes(AssayDefinition assay, string block)
+        {
+            var codes = ParseResultCodes(block);
+            if (codes.Count == 0)
+            {
+                return;
+            }
+
+            var interpretations = codes
+                .Select(c => ResultInterpretations.TryGetValue(c, out var text) ? text : c)
+                .ToList();
+
+            foreach (var target in assay.Targets)
+            {
+                // Clone per target so later UI edits to one channel don't alias.
+                target.ObservationValues = new List<string>(codes);
+                target.InterpretationCodes = new List<string>(interpretations);
+            }
+        }
+
+        private static List<string> ParseResultCodes(string block)
+        {
+            // The result-code table sits between "Sample result codes for OBX
+            // segment" and its "y <name> sample result codes" end marker. The
+            // "(OBX-5)" / "(OBX-8-1)" column tags reliably mark the start of the
+            // code rows, after the header text.
+            var region = SliceBetween(
+                block, "Sample result codes for OBX segment", "sample result codes for OBX");
+            if (region is null)
+            {
+                return new List<string>();
+            }
+
+            // Skip past the column-header tags so "OBX-5"/"OBX-8-1" themselves
+            // (and any preamble) are not scanned for codes.
+            var tag = region.LastIndexOf("(OBX-8-1)", StringComparison.Ordinal);
+            if (tag >= 0)
+            {
+                region = region[(tag + "(OBX-8-1)".Length)..];
+            }
+
+            // Collect codes in first-seen order, de-duplicated. "Error flag"
+            // rows are excluded because they carry no OBX-5 value in this table.
+            var seen = new HashSet<string>(StringComparer.Ordinal);
+            var codes = new List<string>();
+            foreach (Match m in ResultCodeRegex().Matches(region))
+            {
+                var code = m.Groups[1].Value;
+                if (seen.Add(code))
+                {
+                    codes.Add(code);
+                }
+            }
+
+            return codes;
         }
 
         // --- Helpers --------------------------------------------------------

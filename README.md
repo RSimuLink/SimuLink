@@ -97,6 +97,8 @@ rather than failing — a manual can then be imported from Settings. An imported
 manual replaces the default for the session, and is persisted across restarts
 when "remember catalog" is selected.
 
-> Note: the manual parser extracts target identifiers but not their result-code
-> tables, so a freshly parsed catalog has empty observation values until they
-> are entered in the UI.
+> Note: the parser reads each assay's result-code table (OBX-5 values such as
+> POS/NEG or VAL/AT/BT/ND, paired with their OBX-8-1 interpretations), so the
+> result dropdown is populated for most targets out of the box. A few
+> control/blood-screening assays whose code tables span a page boundary are not
+> stitched together and have empty values until entered in the UI.
