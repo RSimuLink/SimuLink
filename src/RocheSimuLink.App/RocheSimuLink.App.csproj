@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net10.0-windows</TargetFramework>
+    <RootNamespace>RocheSimuLink</RootNamespace>
+    <Nullable>enable</Nullable>
+    <UseWindowsForms>true</UseWindowsForms>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\RocheSimuLink.Core\RocheSimuLink.Core.csproj" />
+  </ItemGroup>
+
+  <!-- Bundle the Host Interface Manual next to the executable so the app ships
+       with a default assay catalog. Linked from the repo root to avoid
+       duplicating the PDF; SettingsLoader parses it at startup. -->
+  <ItemGroup>
+    <None Include="..\..\HIMv2_1.pdf" Link="HIMv2_1.pdf" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+</Project>
