@@ -1,0 +1,36 @@
+tasks:
+  restore:
+    name: Install dependencies
+    description: Restore NuGet packages for the solution.
+    command: |
+      # EnableWindowsTargeting lets the WinForms app's framework reference
+      # resolve on Linux during restore; it does not build Windows code.
+      dotnet restore RocheSimuLink.slnx -p:EnableWindowsTargeting=true
+    triggeredBy:
+      - manual
+      - postDevcontainerStart
+      - prebuild
+
+  build:
+    name: Build
+    description: >-
+      Build the Core library and test project. The WinForms app
+      (net10.0-windows) needs EnableWindowsTargeting to compile on Linux and
+      only runs on Windows, so it is excluded from the default Linux build.
+    command: |
+      dotnet build src/RocheSimuLink.Core/RocheSimuLink.Core.csproj
+      dotnet build tests/RocheSimuLink.Core.Tests/RocheSimuLink.Core.Tests.csproj
+    triggeredBy:
+      - manual
+    dependsOn:
+      - restore
+
+  test:
+    name: Test
+    description: Run the Core test suite.
+    command: |
+      dotnet test tests/RocheSimuLink.Core.Tests/RocheSimuLink.Core.Tests.csproj
+    triggeredBy:
+      - manual
+    dependsOn:
+      - restore
