@@ -30,10 +30,13 @@ namespace RocheSimuLink.Models.Him
         /// <summary>OBX-3 observation identifier (e.g. "CT^CT^99ROC").</summary>
         public string ObservationIdentifier { get; set; } = string.Empty;
 
-        /// <summary>OBX-5 observation values this target can report (e.g. "Positive").</summary>
+        /// <summary>OBX-5 observation values this target can report (e.g. "POS").</summary>
         public List<string> ObservationValues { get; set; } = new();
 
-        /// <summary>OBX-8-1 interpretation codes paired with the values (e.g. "POS").</summary>
+        /// <summary>
+        /// OBX-8-1 interpretation text paired one-to-one with the values
+        /// (e.g. "Positive" for the "POS" value).
+        /// </summary>
         public List<string> InterpretationCodes { get; set; } = new();
     }
 

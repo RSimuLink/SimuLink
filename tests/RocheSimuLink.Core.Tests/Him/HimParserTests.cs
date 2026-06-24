@@ -77,6 +77,14 @@ public class HimParserTests
         var targets = ctng.Targets.Select(t => t.ObservationIdentifier).ToList();
         Assert.Contains("CT^CT^99ROC", targets);
         Assert.Contains("NG^NG^99ROC", targets);
+
+        // Result codes (OBX-5) and their interpretations (OBX-8-1): the
+        // qualitative POS/NEG set applies to every target.
+        Assert.All(ctng.Targets, t =>
+        {
+            Assert.Equal(new[] { "POS", "NEG" }, t.ObservationValues);
+            Assert.Equal(new[] { "Positive", "Negative" }, t.InterpretationCodes);
+        });
     }
 
     [Fact]
@@ -86,8 +94,38 @@ public class HimParserTests
         var bkv = Assay("BKV");
         Assert.True(bkv.IsQuantitative);
         Assert.Contains(bkv.Tests, t => t.UniversalServiceIdentifier == "32284-2^BKV^LN");
-        Assert.Contains(bkv.Targets, t => t.ObservationIdentifier == "BKV^BKV^99ROC");
         Assert.Contains(bkv.SampleTypes, s => s.SpecimenType == "PLAS^plasma^HL70487");
+
+        // The quantitative titer result-code set (VAL/AT/BT/ND) on the target.
+        var target = Assert.Single(bkv.Targets);
+        Assert.Equal("BKV^BKV^99ROC", target.ObservationIdentifier);
+        Assert.Equal(new[] { "VAL", "AT", "BT", "ND" }, target.ObservationValues);
+        Assert.Equal(
+            new[] { "Valid", "Above Titer", "Below Titer", "Not Detected" },
+            target.InterpretationCodes);
+    }
+
+    [Fact]
+    public void EveryParsedTargetHasMatchingValueAndInterpretationCounts()
+    {
+        foreach (var target in Manual().Assays.SelectMany(a => a.Targets))
+        {
+            Assert.Equal(
+                target.ObservationValues.Count, target.InterpretationCodes.Count);
+        }
+    }
+
+    [Fact]
+    public void MostTargetsCarryResultCodes()
+    {
+        var targets = Manual().Assays.SelectMany(a => a.Targets).ToList();
+        var withValues = targets.Count(t => t.ObservationValues.Count > 0);
+
+        // The bulk of targets resolve result codes. A handful (control/
+        // blood-screening assays whose code tables span a page boundary) do
+        // not, which the page-scoped parser does not stitch together.
+        Assert.True(withValues >= targets.Count * 0.8,
+            $"Only {withValues}/{targets.Count} targets carry result codes.");
     }
 
     [Fact]
