@@ -1,21 +1,11 @@
-// The Dev Container format allows you to configure your environment. At the heart of it
-// is a Docker image or Dockerfile which controls the tools available in your environment.
-//
-// See https://aka.ms/devcontainer.json for more information.
 {
-	"name": "Ona",
-	"image": "eu.repository.roche.com/cde-gitpod-docker-prd-l/ona-base:2.0"
-	// Use "build":
-	// instead of the image to use a Dockerfile to build an image.
-	// "build": {
-    //     "context": ".",
-    //     "dockerfile": "Dockerfile"
-    // }
-	// Features add additional features to your environment. See https://containers.dev/features
-	// Beware: features are not supported on all platforms and may have unintended side-effects.
-	// "features": {
-    //   "ghcr.io/devcontainers/features/docker-in-docker": {
-    //     "moby": false
-    //   }
-    // }
+	"name": "Roche SimuLink",
+	"image": "eu.repository.roche.com/cde-gitpod-docker-prd-l/ona-base:2.0",
+	// The .NET 10 SDK is provided via a feature so it is baked into the image
+	// and on PATH for every shell, rather than relying on a per-user install.
+	"features": {
+		"ghcr.io/devcontainers/features/dotnet": {
+			"version": "10.0"
+		}
+	}
 }
