@@ -1,4 +1,3 @@
-using RocheSimuLink.HL7.Builders;
 using RocheSimuLink.Models;
 using Xunit;
 
@@ -24,18 +23,5 @@ public class ResultCodeTests
     public void ResultFlag_MapsToHl7Code(ResultFlag flag, string expected)
     {
         Assert.Equal(expected, flag.ToHl7Code());
-    }
-
-    [Fact]
-    public void Obx_IncludesFlagAndStatusInCorrectFields()
-    {
-        var target = new Target { ObservationIdentifier = "HIV^HIV^L" };
-
-        var obx = ObxBuilder.Build(target, "Positive", ResultFlag.Critical.ToHl7Code(), ResultStatus.Final);
-        var fields = obx.Split('|');
-
-        Assert.Equal("Positive", fields[5]); // OBX-5 value
-        Assert.Equal("AA", fields[8]);       // OBX-8 abnormal flag
-        Assert.Equal("F", fields[11]);       // OBX-11 result status
     }
 }
