@@ -100,11 +100,11 @@ artifact (and release asset for tags).
 Requires the .NET 10 SDK and [Inno Setup 6](https://jrsoftware.org/isdl.php):
 
 ```powershell
-powershell -ExecutionPolicy Bypass -File installer\build-installer.ps1 -Version 1.0.3
+powershell -ExecutionPolicy Bypass -File installer\build-installer.ps1 -Version 1.0.4
 ```
 
 This publishes a self-contained `win-x64` build and compiles the installer to
-`installer\output\RocheSimuLink-Setup-1.0.3.exe`.
+`installer\output\RocheSimuLink-Setup-1.0.4.exe`.
 
 ### Code signing (optional, self-signed)
 
@@ -130,19 +130,36 @@ from a trusted CA).
    .\installer\build-installer.ps1 -CertPath .\installer\certs\RocheSimuLink-CodeSigning.pfx -CertPassword $pw
    ```
 
-   This signs both the app executable and the final `Setup.exe`.
+   This signs both the app executable and the final `Setup.exe`, and embeds the
+   public `.cer` (found next to the `.pfx`) so the installer can offer to trust
+   the publisher.
 
-3. On **each target PC**, import the public certificate (elevated PowerShell)
-   so Windows trusts the signature:
+3. **Run the installer on the target PC.** When the build is signed, the wizard
+   shows a checkbox — *"Trust the Roche Diagnostics International publisher
+   certificate (recommended)"* — ticked by default. Leaving it ticked imports
+   the certificate into the machine trust stores during install, so afterwards
+   the installed app, its shortcuts, and any future installer signed with the
+   same certificate show **Roche Diagnostics International** and no longer warn
+   on that PC.
+
+   **First-run caveat:** the certificate is trusted *during* installation, so
+   the **very first** UAC prompt — shown the moment you launch `Setup.exe` on a
+   fresh PC, before anything runs — still says "Unknown publisher." Every prompt
+   after that (the installed app, re-running the installer, future updates) shows
+   the publisher correctly.
+
+   To fix even that first prompt, pre-trust the certificate before running the
+   installer — typically pushed once via **Group Policy** in a managed
+   environment, or manually in an elevated PowerShell:
 
    ```powershell
    Import-Certificate -FilePath RocheSimuLink-CodeSigning.cer -CertStoreLocation Cert:\LocalMachine\Root
    Import-Certificate -FilePath RocheSimuLink-CodeSigning.cer -CertStoreLocation Cert:\LocalMachine\TrustedPublisher
    ```
 
-   In a managed environment this is typically pushed via Group Policy. On any PC
-   that has **not** imported the `.cer`, the "Unknown publisher" warning will
-   still appear, because a self-signed certificate is not chained to a public CA.
+   A self-signed certificate is not chained to a public CA, so this trust step
+   (whether via the installer checkbox or Group Policy) is required on each PC.
+   The uninstaller removes the certificate it added.
 
 > The `.pfx`, `.cer`, and `installer\certs\` are git-ignored. Never commit the
 > private key or its password.
