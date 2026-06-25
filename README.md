@@ -115,11 +115,11 @@ artifact (and release asset for tags).
 Requires the .NET 10 SDK and [Inno Setup 6](https://jrsoftware.org/isdl.php):
 
 ```powershell
-powershell -ExecutionPolicy Bypass -File installer\build-installer.ps1 -Version 1.0.4
+powershell -ExecutionPolicy Bypass -File installer\build-installer.ps1 -Version 1.0.5
 ```
 
 This publishes a self-contained `win-x64` build and compiles the installer to
-`installer\output\RocheSimuLink-Setup-1.0.4.exe`.
+`installer\output\RocheSimuLink-Setup-1.0.5.exe`.
 
 ### Code signing (optional, self-signed)
 
