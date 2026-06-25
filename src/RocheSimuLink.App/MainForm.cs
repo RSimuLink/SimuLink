@@ -2,6 +2,7 @@ using RocheSimuLink.HL7.Law;
 using RocheSimuLink.Logging;
 using RocheSimuLink.Models;
 using RocheSimuLink.Models.Orders;
+using RocheSimuLink.Models.Workflows;
 using RocheSimuLink.Services;
 
 namespace RocheSimuLink;
@@ -212,6 +213,42 @@ public partial class MainForm : Form
     private ResultFlag SelectedFlag() =>
         ResultEntryPresenter.ResolveFlag(
             chkCritical.Checked, chkHigh.Checked, chkLow.Checked);
+
+    // --- Example Generator --------------------------------------------------
+
+    private void exampleGeneratorMenuItem_Click(object? sender, EventArgs e)
+    {
+        // No LIS connection needed — the generator only formats messages from
+        // whatever is currently typed into the result-entry fields.
+        var input = BuildExampleInput();
+        using var dialog = new ExampleGeneratorForm(input, _settings.Connection);
+        dialog.ShowDialog(this);
+    }
+
+    /// <summary>
+    /// Snapshots the current result-entry fields into the generator input. Uses
+    /// the same selections as <see cref="btnSendResult_Click"/> so generated
+    /// examples match what would be sent on the wire.
+    /// </summary>
+    private ExampleGeneratorInput BuildExampleInput()
+    {
+        var test = cmbTestType.SelectedItem as TestType ?? new TestType();
+        var sampleType = cmbSampleType.SelectedItem as SampleType ?? new SampleType();
+        var value = ResultEntryPresenter.EffectiveResultValue(
+            test, cmbResult.SelectedItem?.ToString());
+
+        return new ExampleGeneratorInput
+        {
+            SampleId = txtSampleId.Text.Trim(),
+            Test = test,
+            Target = test.Targets.Count > 0 ? test.Targets[0] : null,
+            SampleType = sampleType,
+            SampleVolume = cmbSampleVolume.SelectedItem?.ToString() ?? string.Empty,
+            ResultValue = value,
+            ResultStatus = (ResultStatus)(cmbResultStatus.SelectedItem ?? ResultStatus.Final),
+            ResultFlag = SelectedFlag(),
+        };
+    }
 
     // --- Receiving orders ---------------------------------------------------
 
