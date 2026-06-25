@@ -56,6 +56,9 @@ public class HimEndToEndTests
         Assert.Equal(sampleTypes.Select(s => s.Hl7Code),
             sampleTypes.Select(s => s.Hl7Code).Distinct());
 
+        // The full SPM-4 coded element is retained (id^text^system), not just the id.
+        Assert.Contains(sampleTypes, s => s.SpecimenCode == "PLAS^plasma^HL70487");
+
         // The CT/NG panel test mapped through with its two targets.
         var ctng = Assert.Single(testTypes, t =>
             t.UniversalServiceIdentifier == "72828-7^CT/NG^LN");
@@ -94,7 +97,9 @@ public class HimEndToEndTests
         Assert.Equal("OUL^R22", parsed.MessageType);
         // One OBX per CT/NG target (multi-channel) sourced from the manual.
         Assert.Equal(2, parsed.AllSegments("OBX").Count());
-        Assert.Equal("UR", parsed.Segment("SPM")!.Component(4, 1));
+        // SPM-4 carries the full coded element from the manual, not just the id.
+        var spm4 = parsed.Segment("SPM")!.Field(4);
+        Assert.Equal("UR^Urine^HL70487", spm4);
         // OBX-3 carries the manual's observation identifiers.
         var obxIds = parsed.AllSegments("OBX").Select(o => o.Component(3, 1)).ToList();
         Assert.Contains("CT", obxIds);
