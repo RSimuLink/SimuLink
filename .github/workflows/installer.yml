@@ -8,9 +8,9 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: "Installer version (e.g. 1.0.0)"
+        description: "Installer version (e.g. 1.0.3)"
         required: true
-        default: "1.0.0"
+        default: "1.0.3"
   push:
     tags:
       - "v*"
