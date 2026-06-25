@@ -12,7 +12,7 @@
     Inno Setup: https://jrsoftware.org/isdl.php
 
 .PARAMETER Version
-    Product/installer version (default 1.0.3).
+    Product/installer version (default 1.0.4).
 
 .PARAMETER Configuration
     Build configuration (default Release).
@@ -25,6 +25,12 @@
 .PARAMETER CertPassword
     Password (SecureString) for the .pfx. Required when -CertPath is given; you
     will be prompted if it is omitted.
+
+.PARAMETER CertPublicPath
+    Optional path to the PUBLIC certificate (.cer) matching -CertPath. When the
+    build is signed, this .cer is embedded in the installer so the wizard can
+    offer to trust the publisher on the target PC. Defaults to the .cer sitting
+    next to the .pfx (same base name), as produced by create-self-signed-cert.ps1.
 
 .PARAMETER TimestampUrl
     RFC 3161 timestamp server, so signatures stay valid after the certificate
@@ -41,10 +47,11 @@
 #>
 [CmdletBinding()]
 param(
-    [string]$Version = "1.0.3",
+    [string]$Version = "1.0.4",
     [string]$Configuration = "Release",
     [string]$CertPath,
     [System.Security.SecureString]$CertPassword,
+    [string]$CertPublicPath,
     [string]$TimestampUrl = "http://timestamp.digicert.com"
 )
 
@@ -74,6 +81,21 @@ if ($signEnabled) {
         $signtool = $found.FullName
     }
     Write-Host "==> Code-signing enabled (signtool: $signtool)" -ForegroundColor Cyan
+
+    # Resolve the public .cer used for the installer's trust step. Default to a
+    # .cer next to the .pfx (same base name), as create-self-signed-cert.ps1
+    # produces. Optional: if absent, the build is still signed but the installer
+    # won't offer the publisher-trust step.
+    if ([string]::IsNullOrWhiteSpace($CertPublicPath)) {
+        $CertPublicPath = [IO.Path]::ChangeExtension($CertPath, ".cer")
+    }
+    if (Test-Path $CertPublicPath) {
+        Write-Host "    Trust cert for installer: $CertPublicPath" -ForegroundColor Cyan
+    } else {
+        Write-Host "    No public .cer found ($CertPublicPath); installer will" -ForegroundColor Yellow
+        Write-Host "    be signed but won't offer the publisher-trust step." -ForegroundColor Yellow
+        $CertPublicPath = $null
+    }
 }
 
 # Signs one or more files with the configured certificate. No-op when signing
@@ -140,7 +162,12 @@ if (-not $iscc) {
 }
 
 Write-Host "==> Compiling installer with $iscc ..." -ForegroundColor Cyan
-& $iscc "/DAppVersion=$Version" "/DPublishDir=$publishDir" $issScript
+$isccArgs = @("/DAppVersion=$Version", "/DPublishDir=$publishDir")
+# Embed the public cert so the installer can offer the publisher-trust step.
+if ($signEnabled -and $CertPublicPath) {
+    $isccArgs += "/DCertFile=$CertPublicPath"
+}
+& $iscc @isccArgs $issScript
 if ($LASTEXITCODE -ne 0) { throw "Inno Setup compilation failed." }
 
 $setupExe = Join-Path $PSScriptRoot "output\RocheSimuLink-Setup-$Version.exe"
@@ -150,8 +177,14 @@ $setupExe = Join-Path $PSScriptRoot "output\RocheSimuLink-Setup-$Version.exe"
 if ($signEnabled) {
     Write-Host "==> Signing installer..." -ForegroundColor Cyan
     Invoke-Sign -Path $setupExe
-    Write-Host "    Signed. Note: the publisher name shows and warnings clear" -ForegroundColor Yellow
-    Write-Host "    only on PCs that trust this certificate (import the .cer)." -ForegroundColor Yellow
+    if ($CertPublicPath) {
+        Write-Host "    Signed. The installer offers a publisher-trust step; once" -ForegroundColor Yellow
+        Write-Host "    accepted, the app and future installers show the publisher" -ForegroundColor Yellow
+        Write-Host "    on that PC. The very first run on a fresh PC still warns." -ForegroundColor Yellow
+    } else {
+        Write-Host "    Signed. Publisher shows only on PCs that already trust" -ForegroundColor Yellow
+        Write-Host "    this certificate (no .cer embedded for the trust step)." -ForegroundColor Yellow
+    }
 }
 
 Write-Host "==> Installer built: $setupExe" -ForegroundColor Green
