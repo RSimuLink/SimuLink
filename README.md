@@ -22,6 +22,21 @@ be imported at runtime.
   | `RSP^K11` | Query response | Query reply |
   | `ACK^R22` | Acknowledgement | Result acknowledgement |
 
+- **Example Generator** (Tools → Example Generator): produces the full set of
+  LAB-27/28/29 HL7 example messages from the values entered in the main window,
+  **without a LIS connection**. Pick any of the seven flows, generate, then view,
+  copy, or save the messages:
+
+  | Workflow | Message | Direction |
+  | --- | --- | --- |
+  | LAB-27 Work order request | `QBP^Q11` | Instrument → LIS |
+  | LAB-27 Request acknowledge | `RSP^K11` | LIS → Instrument |
+  | LAB-28 Test order submission | `OML^O33` | LIS → Instrument |
+  | LAB-28 Response to a test order | `ORL^O34` | Instrument → LIS |
+  | LAB-29 Test result | `OUL^R22` | Instrument → LIS |
+  | LAB-29 Result accepted | `ACK^R22` | LIS → Instrument |
+  | Control Test result | `OUL^R22` | Instrument → LIS (QC specimen) |
+
 - **Host Interface Manual ingestion**: parses the manual PDF into a structured
   assay catalog (tests, targets, sample types, input volumes) that drives the
   UI dropdowns and message building.

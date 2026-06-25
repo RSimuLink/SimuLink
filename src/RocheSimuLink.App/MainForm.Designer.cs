@@ -17,6 +17,11 @@ partial class MainForm
 
     private void InitializeComponent()
     {
+        // Menu
+        menuStrip = new MenuStrip();
+        toolsMenu = new ToolStripMenuItem();
+        exampleGeneratorMenuItem = new ToolStripMenuItem();
+
         // Toolbar
         pnlToolbar = new Panel();
         btnConnect = new Button();
@@ -73,6 +78,25 @@ partial class MainForm
         ((System.ComponentModel.ISupportInitialize)gridOrders).BeginInit();
         grpLog.SuspendLayout();
         SuspendLayout();
+
+        // 
+        // menuStrip
+        // 
+        menuStrip.Items.Add(toolsMenu);
+        menuStrip.Location = new Point(0, 0);
+        menuStrip.Name = "menuStrip";
+        // 
+        // toolsMenu
+        // 
+        toolsMenu.DropDownItems.Add(exampleGeneratorMenuItem);
+        toolsMenu.Text = "&Tools";
+        toolsMenu.Name = "toolsMenu";
+        // 
+        // exampleGeneratorMenuItem
+        // 
+        exampleGeneratorMenuItem.Text = "&Example Generator...";
+        exampleGeneratorMenuItem.Name = "exampleGeneratorMenuItem";
+        exampleGeneratorMenuItem.Click += exampleGeneratorMenuItem_Click;
 
         // 
         // pnlToolbar
@@ -163,7 +187,7 @@ partial class MainForm
         grpSend.Controls.Add(chkLow);
         grpSend.Controls.Add(chkCritical);
         grpSend.Controls.Add(btnSendResult);
-        grpSend.Location = new Point(12, 68);
+        grpSend.Location = new Point(12, 92);
         grpSend.Size = new Size(480, 360);
         grpSend.Name = "grpSend";
         grpSend.Text = "Send Test Results to LIS";
@@ -260,7 +284,7 @@ partial class MainForm
         grpReceived.Controls.Add(lblSex);
         grpReceived.Controls.Add(txtSex);
         grpReceived.Controls.Add(gridOrders);
-        grpReceived.Location = new Point(504, 68);
+        grpReceived.Location = new Point(504, 92);
         grpReceived.Size = new Size(560, 360);
         grpReceived.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
         grpReceived.Name = "grpReceived";
@@ -326,7 +350,7 @@ partial class MainForm
         // grpLog
         // 
         grpLog.Controls.Add(lstLog);
-        grpLog.Location = new Point(12, 440);
+        grpLog.Location = new Point(12, 464);
         grpLog.Size = new Size(1052, 180);
         grpLog.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
         grpLog.Name = "grpLog";
@@ -344,12 +368,15 @@ partial class MainForm
         // 
         AutoScaleDimensions = new SizeF(7F, 15F);
         AutoScaleMode = AutoScaleMode.Font;
-        ClientSize = new Size(1076, 632);
+        ClientSize = new Size(1076, 656);
         Controls.Add(grpLog);
         Controls.Add(grpReceived);
         Controls.Add(grpSend);
         Controls.Add(pnlToolbar);
-        MinimumSize = new Size(1092, 671);
+        // Added last so it docks above the toolbar; set as the form's menu.
+        Controls.Add(menuStrip);
+        MainMenuStrip = menuStrip;
+        MinimumSize = new Size(1092, 695);
         Name = "MainForm";
         StartPosition = FormStartPosition.CenterScreen;
         Text = "Roche SimuLink";
@@ -366,6 +393,10 @@ partial class MainForm
     }
 
     #endregion
+
+    private MenuStrip menuStrip;
+    private ToolStripMenuItem toolsMenu;
+    private ToolStripMenuItem exampleGeneratorMenuItem;
 
     private Panel pnlToolbar;
     private Button btnConnect;
