@@ -23,16 +23,27 @@ public partial class MainForm : Form
     }
 
     /// <summary>
-    /// Loads the Roche logo bundled next to the executable
-    /// (Assets/roche-logo.png). Returns null if the file is missing or
-    /// unreadable, in which case the brand area is simply blank rather than
-    /// blocking startup.
+    /// Loads the Roche brand logo (Assets/roche-logo.png) shown on the right of
+    /// the toolbar.
     /// </summary>
-    private static Image? LoadBrandLogo()
+    private static Image? LoadBrandLogo() => LoadAsset("roche-logo.png");
+
+    /// <summary>
+    /// Loads the SimuLink product logo (Assets/SimuLinkLogo.png) shown on the
+    /// left of the toolbar.
+    /// </summary>
+    private static Image? LoadAppLogo() => LoadAsset("SimuLinkLogo.png");
+
+    /// <summary>
+    /// Loads an image bundled in the Assets folder next to the executable.
+    /// Returns null if the file is missing or unreadable, in which case the
+    /// area is simply blank rather than blocking startup.
+    /// </summary>
+    private static Image? LoadAsset(string fileName)
     {
         try
         {
-            var path = Path.Combine(AppContext.BaseDirectory, "Assets", "roche-logo.png");
+            var path = Path.Combine(AppContext.BaseDirectory, "Assets", fileName);
             if (!File.Exists(path))
             {
                 return null;

@@ -1,11 +1,15 @@
 # App brand assets
 
 `roche-logo.png` — the Roche logo shown in the top-right of the main toolbar.
+`SimuLinkLogo.png` — the SimuLink product logo shown in the top-left of the
+main toolbar (in line with the Roche logo).
 
-The app loads this file at runtime from `Assets/roche-logo.png` next to the
-executable. If it is missing, the brand area is left blank (startup is not
+The app loads these files at runtime from the `Assets` folder next to the
+executable. If a file is missing, that logo area is left blank (startup is not
 affected).
 
-Recommended: a transparent-background PNG, roughly 2:1 aspect ratio (the
-toolbar displays it at ~80×40 px with `Zoom` scaling, so a larger source such
-as 800×400 looks crisp on high-DPI displays).
+Recommended: transparent-background PNGs sized for high-DPI displays.
+- `roche-logo.png`: roughly 2:1 aspect; displayed at ~80×40 px with `Zoom`
+  scaling (e.g. an 800×400 source).
+- `SimuLinkLogo.png`: roughly 3:1 aspect; displayed at ~130×40 px with `Zoom`
+  scaling.
