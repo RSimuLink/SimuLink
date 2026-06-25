@@ -1,0 +1,59 @@
+name: Windows installer
+
+# Builds the self-contained Windows installer on a Windows runner (the WinForms
+# app cannot be published on Linux). Runs on demand and on version tags; the
+# resulting Setup .exe is uploaded as a build artifact, and attached to a
+# GitHub Release when triggered by a v* tag.
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Installer version (e.g. 1.0.0)"
+        required: true
+        default: "1.0.0"
+  push:
+    tags:
+      - "v*"
+
+jobs:
+  build:
+    runs-on: windows-latest
+    # Needed for the release step to attach the installer on v* tags.
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up .NET 10 SDK
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "10.0.x"
+
+      - name: Resolve version
+        id: ver
+        shell: pwsh
+        run: |
+          if ($env:GITHUB_REF -like 'refs/tags/v*') {
+            $v = $env:GITHUB_REF -replace 'refs/tags/v',''
+          } else {
+            $v = '${{ github.event.inputs.version }}'
+          }
+          "version=$v" >> $env:GITHUB_OUTPUT
+          Write-Host "Building version $v"
+
+      - name: Build installer
+        shell: pwsh
+        run: ./installer/build-installer.ps1 -Version ${{ steps.ver.outputs.version }}
+
+      - name: Upload installer artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: RocheSimuLink-Setup-${{ steps.ver.outputs.version }}
+          path: installer/output/RocheSimuLink-Setup-${{ steps.ver.outputs.version }}.exe
+          if-no-files-found: error
+
+      - name: Attach installer to release
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: installer/output/RocheSimuLink-Setup-${{ steps.ver.outputs.version }}.exe

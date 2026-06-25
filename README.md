@@ -75,6 +75,43 @@ by enabling Windows targeting:
 dotnet build src/RocheSimuLink.App/RocheSimuLink.App.csproj -p:EnableWindowsTargeting=true
 ```
 
+## Packaging a Windows installer
+
+The app can be packaged as a single self-contained Windows installer. "Self-
+contained" means the .NET runtime is bundled, so target machines need **no
+separate .NET installation** — install and run on any 64-bit Windows PC.
+
+The installer must be built **on Windows** (the WinForms app cannot be published
+from Linux). There are two ways:
+
+### Via GitHub Actions (no Windows machine needed)
+
+The **Windows installer** workflow builds the installer on a Windows runner:
+
+- Run it manually from the Actions tab (provide a version), or
+- Push a `v*` tag (e.g. `v1.0.0`) to build and attach the installer to a GitHub
+  Release.
+
+The resulting `RocheSimuLink-Setup-<version>.exe` is uploaded as a build
+artifact (and release asset for tags).
+
+### Locally on Windows
+
+Requires the .NET 10 SDK and [Inno Setup 6](https://jrsoftware.org/isdl.php):
+
+```powershell
+powershell -ExecutionPolicy Bypass -File installer\build-installer.ps1 -Version 1.0.0
+```
+
+This publishes a self-contained `win-x64` build and compiles the installer to
+`installer\output\RocheSimuLink-Setup-1.0.0.exe`.
+
+### Installing
+
+Run the Setup `.exe`. It installs to Program Files, adds a Start-menu entry
+(and an optional desktop shortcut), bundles the default `HIMv2_1.pdf` catalog,
+and registers an uninstaller in Add/Remove Programs.
+
 ## Running the simulator
 
 Launch `RocheSimuLink.App` on Windows. From the **Settings** dialog you can:
