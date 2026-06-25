@@ -82,7 +82,18 @@ contained" means the .NET runtime is bundled, so target machines need **no
 separate .NET installation** — install and run on any 64-bit Windows PC.
 
 The installer must be built **on Windows** (the WinForms app cannot be published
-from Linux).
+from Linux). There are two ways:
+
+### Via GitHub Actions (no Windows machine needed)
+
+The **Windows installer** workflow builds the installer on a Windows runner:
+
+- Run it manually from the Actions tab (provide a version), or
+- Push a `v*` tag (e.g. `v1.0.0`) to build and attach the installer to a GitHub
+  Release.
+
+The resulting `RocheSimuLink-Setup-<version>.exe` is uploaded as a build
+artifact (and release asset for tags).
 
 ### Locally on Windows
 
