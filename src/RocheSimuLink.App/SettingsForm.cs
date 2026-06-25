@@ -62,11 +62,11 @@ public sealed class SettingsForm : Form
     private void BuildLayout()
     {
         Text = "Settings";
-        FormBorderStyle = FormBorderStyle.FixedDialog;
+        // Resizable so the dialog can never trap content the user can't reach.
+        FormBorderStyle = FormBorderStyle.Sizable;
         StartPosition = FormStartPosition.CenterParent;
         MaximizeBox = false;
         MinimizeBox = false;
-        ClientSize = new Size(440, 470);
 
         var layout = new TableLayoutPanel
         {
@@ -74,6 +74,7 @@ public sealed class SettingsForm : Form
             ColumnCount = 2,
             Padding = new Padding(12),
             AutoSize = true,
+            AutoSizeMode = AutoSizeMode.GrowAndShrink,
         };
         layout.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 170));
         layout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));
@@ -129,11 +130,32 @@ public sealed class SettingsForm : Form
         buttons.Controls.Add(btnCancel);
         buttons.Controls.Add(btnOk);
 
-        Controls.Add(layout);
+        // Host the form in a scrollable panel so the catalog controls are always
+        // reachable, regardless of DPI/scaling or how tall the content grows.
+        var contentPanel = new Panel
+        {
+            Dock = DockStyle.Fill,
+            AutoScroll = true,
+        };
+        contentPanel.Controls.Add(layout);
+
+        // Add the docked button bar first, then the fill panel: docking honors
+        // reverse z-order, so the bar pins to the bottom and the panel fills the
+        // remaining space above it (never overlapping).
         Controls.Add(buttons);
+        Controls.Add(contentPanel);
 
         AcceptButton = btnOk;
         CancelButton = btnCancel;
+
+        // Size the dialog to its actual content (plus the button bar and a
+        // little slack), so nothing is clipped at first show. A minimum size
+        // keeps it usable if the user shrinks it.
+        var contentSize = layout.PreferredSize;
+        var width = Math.Max(460, contentSize.Width + SystemInformation.VerticalScrollBarWidth + 24);
+        var height = contentSize.Height + buttons.Height + 24;
+        ClientSize = new Size(width, height);
+        MinimumSize = new Size(460, 320);
     }
 
     private static void AddRow(TableLayoutPanel layout, string label, Control input)
