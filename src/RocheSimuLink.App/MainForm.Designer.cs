@@ -22,7 +22,7 @@ partial class MainForm
         btnConnect = new Button();
         btnDisconnect = new Button();
         btnSettings = new Button();
-        lblBrand = new Label();
+        picBrand = new PictureBox();
 
         // Left: Send results
         grpSend = new GroupBox();
@@ -80,7 +80,7 @@ partial class MainForm
         pnlToolbar.Controls.Add(btnConnect);
         pnlToolbar.Controls.Add(btnDisconnect);
         pnlToolbar.Controls.Add(btnSettings);
-        pnlToolbar.Controls.Add(lblBrand);
+        pnlToolbar.Controls.Add(picBrand);
         pnlToolbar.Dock = DockStyle.Top;
         pnlToolbar.Height = 56;
         pnlToolbar.Name = "pnlToolbar";
@@ -118,15 +118,16 @@ partial class MainForm
         btnSettings.Click += btnSettings_Click;
 
         // 
-        // lblBrand
+        // picBrand (Roche logo)
         // 
-        lblBrand.Anchor = AnchorStyles.Top | AnchorStyles.Right;
-        lblBrand.AutoSize = true;
-        lblBrand.Font = new Font("Segoe UI", 14F, FontStyle.Bold);
-        lblBrand.ForeColor = Color.FromArgb(0, 102, 204);
-        lblBrand.Location = new Point(960, 14);
-        lblBrand.Name = "lblBrand";
-        lblBrand.Text = "Roche";
+        picBrand.Anchor = AnchorStyles.Top | AnchorStyles.Right;
+        picBrand.BackColor = Color.Transparent;
+        picBrand.Location = new Point(880, 8);
+        picBrand.Size = new Size(80, 40);
+        picBrand.Name = "picBrand";
+        picBrand.SizeMode = PictureBoxSizeMode.Zoom;
+        picBrand.TabStop = false;
+        picBrand.Image = LoadBrandLogo();
 
         // 
         // grpSend
@@ -357,7 +358,7 @@ partial class MainForm
     private Button btnConnect;
     private Button btnDisconnect;
     private Button btnSettings;
-    private Label lblBrand;
+    private PictureBox picBrand;
 
     private GroupBox grpSend;
     private Label lblSampleId;

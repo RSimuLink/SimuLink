@@ -28,4 +28,10 @@
     <None Include="..\..\HIMv2_1.pdf" Link="HIMv2_1.pdf" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
+  <!-- Bundle brand assets (Roche logo) next to the executable; loaded at
+       runtime by the toolbar. -->
+  <ItemGroup>
+    <None Include="Assets\**" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
 </Project>
