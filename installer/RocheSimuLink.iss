@@ -8,7 +8,7 @@
 ; The build-installer.ps1 script wires these up automatically.
 
 #ifndef AppVersion
-  #define AppVersion "1.0.0"
+  #define AppVersion "1.0.3"
 #endif
 
 #ifndef PublishDir
@@ -19,7 +19,7 @@
 
 #define AppName "Roche SimuLink"
 #define AppExe "RocheSimuLink.App.exe"
-#define AppPublisher "Roche"
+#define AppPublisher "Roche Diagnostics International"
 
 [Setup]
 AppId={{B6F0D6F2-3C7A-4E2C-9A1E-7E2D4F1B9C10}

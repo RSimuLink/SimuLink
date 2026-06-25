@@ -12,7 +12,7 @@
     Inno Setup: https://jrsoftware.org/isdl.php
 
 .PARAMETER Version
-    Product/installer version (default 1.0.0).
+    Product/installer version (default 1.0.3).
 
 .PARAMETER Configuration
     Build configuration (default Release).
@@ -22,7 +22,7 @@
 #>
 [CmdletBinding()]
 param(
-    [string]$Version = "1.0.0",
+    [string]$Version = "1.0.3",
     [string]$Configuration = "Release"
 )
 
