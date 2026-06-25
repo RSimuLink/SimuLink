@@ -23,6 +23,7 @@ partial class MainForm
         btnDisconnect = new Button();
         btnSettings = new Button();
         picBrand = new PictureBox();
+        picAppLogo = new PictureBox();
 
         // Left: Send results
         grpSend = new GroupBox();
@@ -77,6 +78,7 @@ partial class MainForm
         // pnlToolbar
         // 
         pnlToolbar.BackColor = Color.White;
+        pnlToolbar.Controls.Add(picAppLogo);
         pnlToolbar.Controls.Add(btnConnect);
         pnlToolbar.Controls.Add(btnDisconnect);
         pnlToolbar.Controls.Add(btnSettings);
@@ -86,12 +88,23 @@ partial class MainForm
         pnlToolbar.Name = "pnlToolbar";
 
         // 
+        // picAppLogo (SimuLink logo)
+        // 
+        picAppLogo.BackColor = Color.Transparent;
+        picAppLogo.Location = new Point(12, 8);
+        picAppLogo.Size = new Size(130, 40);
+        picAppLogo.Name = "picAppLogo";
+        picAppLogo.SizeMode = PictureBoxSizeMode.Zoom;
+        picAppLogo.TabStop = false;
+        picAppLogo.Image = LoadAppLogo();
+
+        // 
         // btnConnect
         // 
         btnConnect.BackColor = Color.FromArgb(0, 102, 204);
         btnConnect.ForeColor = Color.White;
         btnConnect.FlatStyle = FlatStyle.Flat;
-        btnConnect.Location = new Point(12, 10);
+        btnConnect.Location = new Point(158, 10);
         btnConnect.Size = new Size(160, 36);
         btnConnect.Name = "btnConnect";
         btnConnect.Text = "Connect to LIS";
@@ -101,7 +114,7 @@ partial class MainForm
         // 
         // btnDisconnect
         // 
-        btnDisconnect.Location = new Point(180, 10);
+        btnDisconnect.Location = new Point(326, 10);
         btnDisconnect.Size = new Size(140, 36);
         btnDisconnect.Name = "btnDisconnect";
         btnDisconnect.Text = "Disconnect";
@@ -111,7 +124,7 @@ partial class MainForm
         // 
         // btnSettings
         // 
-        btnSettings.Location = new Point(330, 10);
+        btnSettings.Location = new Point(474, 10);
         btnSettings.Size = new Size(140, 36);
         btnSettings.Name = "btnSettings";
         btnSettings.Text = "⚙  Settings";
@@ -359,6 +372,7 @@ partial class MainForm
     private Button btnDisconnect;
     private Button btnSettings;
     private PictureBox picBrand;
+    private PictureBox picAppLogo;
 
     private GroupBox grpSend;
     private Label lblSampleId;

@@ -116,16 +116,20 @@ public sealed class SettingsForm : Form
             tb.Width = 200;
         }
 
-        var btnOk = new Button { Text = "OK", DialogResult = DialogResult.OK, Width = 90 };
-        var btnCancel = new Button { Text = "Cancel", DialogResult = DialogResult.Cancel, Width = 90 };
+        var btnOk = new Button { Text = "OK", DialogResult = DialogResult.OK, Width = 90, Height = 32 };
+        var btnCancel = new Button { Text = "Cancel", DialogResult = DialogResult.Cancel, Width = 90, Height = 32 };
         btnOk.Click += (_, _) => SaveValues();
 
+        // Auto-size the bar to its buttons (plus padding) so the OK/Cancel row
+        // is never clipped, regardless of DPI/scaling.
         var buttons = new FlowLayoutPanel
         {
             Dock = DockStyle.Bottom,
             FlowDirection = FlowDirection.RightToLeft,
             Padding = new Padding(12),
-            Height = 56,
+            AutoSize = true,
+            AutoSizeMode = AutoSizeMode.GrowAndShrink,
+            WrapContents = false,
         };
         buttons.Controls.Add(btnCancel);
         buttons.Controls.Add(btnOk);
@@ -150,10 +154,12 @@ public sealed class SettingsForm : Form
 
         // Size the dialog to its actual content (plus the button bar and a
         // little slack), so nothing is clipped at first show. A minimum size
-        // keeps it usable if the user shrinks it.
+        // keeps it usable if the user shrinks it. The content panel scrolls, so
+        // even if the form is later shrunk the catalog controls stay reachable.
         var contentSize = layout.PreferredSize;
+        var barHeight = buttons.PreferredSize.Height;
         var width = Math.Max(460, contentSize.Width + SystemInformation.VerticalScrollBarWidth + 24);
-        var height = contentSize.Height + buttons.Height + 24;
+        var height = contentSize.Height + barHeight + 24;
         ClientSize = new Size(width, height);
         MinimumSize = new Size(460, 320);
     }
