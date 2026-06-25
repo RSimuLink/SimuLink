@@ -35,7 +35,12 @@ public class ExampleGeneratorTests
                 },
             },
         },
-        SampleType = new SampleType { DisplayName = "Plasma", Hl7Code = "PLAS" },
+        SampleType = new SampleType
+        {
+            DisplayName = "Plasma",
+            Hl7Code = "PLAS",
+            SpecimenCode = "PLAS^plasma^HL70487",
+        },
         SampleVolume = "500 uL",
         ResultValue = "130",
         ResultStatus = ResultStatus.Final,
@@ -131,7 +136,8 @@ public class ExampleGeneratorTests
         var segs = msg.RawMessage.Split('\r');
 
         Assert.Contains("OUL^R22^OUL_R22", msg.RawMessage);
-        Assert.Contains(segs, s => s.StartsWith("SPM") && s.Contains("PLAS"));
+        // SPM-4 carries the full coded element, not just the identifier.
+        Assert.Contains(segs, s => s.StartsWith("SPM") && s.Contains("PLAS^plasma^HL70487"));
         Assert.Contains(segs, s => s.StartsWith("OBX") && s.Contains("130"));
         Assert.Contains(segs, s => s.StartsWith("TCD") && s.Contains("500^uL&&UCUM"));
         // Patient role on the standard result.

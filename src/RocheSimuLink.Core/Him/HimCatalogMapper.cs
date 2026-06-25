@@ -50,6 +50,8 @@ namespace RocheSimuLink.Him
                     DisplayName = s.Name,
                     // SPM-4 identifier component (e.g. "PLAS" from "PLAS^plasma^HL70487").
                     Hl7Code = s.SpecimenType.Split('^')[0],
+                    // Full SPM-4 coded element (e.g. "PLAS^plasma^HL70487").
+                    SpecimenCode = s.SpecimenType,
                 })
                 .ToList();
         }

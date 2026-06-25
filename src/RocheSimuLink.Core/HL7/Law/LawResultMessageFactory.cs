@@ -70,7 +70,8 @@ namespace RocheSimuLink.HL7.Law
                 Specimen = new Specimen
                 {
                     SampleId = sampleId,
-                    SpecimenType = new CodedElement(sampleType.Hl7Code),
+                    SpecimenType = CodedElement.Parse(
+                        sampleType.SpecimenCode.Length > 0 ? sampleType.SpecimenCode : sampleType.Hl7Code),
                     Role = "P",
                 },
                 Tests =

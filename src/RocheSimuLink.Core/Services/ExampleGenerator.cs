@@ -190,7 +190,10 @@ namespace RocheSimuLink.Services
         {
             SampleId = input.SampleId,
             Namespace = "ROCHE",
-            SpecimenType = new CodedElement(input.SampleType.Hl7Code),
+            SpecimenType = CodedElement.Parse(
+                input.SampleType.SpecimenCode.Length > 0
+                    ? input.SampleType.SpecimenCode
+                    : input.SampleType.Hl7Code),
             Role = role,
         };
 
