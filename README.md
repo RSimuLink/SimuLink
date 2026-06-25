@@ -106,6 +106,47 @@ powershell -ExecutionPolicy Bypass -File installer\build-installer.ps1 -Version 
 This publishes a self-contained `win-x64` build and compiles the installer to
 `installer\output\RocheSimuLink-Setup-1.0.3.exe`.
 
+### Code signing (optional, self-signed)
+
+By default the installer is **unsigned**, so Windows shows "Unknown publisher"
+on the UAC prompt. You can sign it with a **self-signed** certificate to make
+the publisher name appear and clear the warning — but only on PCs that are
+configured to trust that certificate. This is suitable for a controlled set of
+lab machines, **not** for public distribution (for that you need a certificate
+from a trusted CA).
+
+1. Create the certificate (once). This writes a `.pfx` (private key, for
+   signing) and a `.cer` (public cert, for trusting on target PCs) into
+   `installer\certs\`:
+
+   ```powershell
+   powershell -ExecutionPolicy Bypass -File installer\create-self-signed-cert.ps1
+   ```
+
+2. Build and sign in one step:
+
+   ```powershell
+   $pw = Read-Host -AsSecureString "PFX password"
+   .\installer\build-installer.ps1 -CertPath .\installer\certs\RocheSimuLink-CodeSigning.pfx -CertPassword $pw
+   ```
+
+   This signs both the app executable and the final `Setup.exe`.
+
+3. On **each target PC**, import the public certificate (elevated PowerShell)
+   so Windows trusts the signature:
+
+   ```powershell
+   Import-Certificate -FilePath RocheSimuLink-CodeSigning.cer -CertStoreLocation Cert:\LocalMachine\Root
+   Import-Certificate -FilePath RocheSimuLink-CodeSigning.cer -CertStoreLocation Cert:\LocalMachine\TrustedPublisher
+   ```
+
+   In a managed environment this is typically pushed via Group Policy. On any PC
+   that has **not** imported the `.cer`, the "Unknown publisher" warning will
+   still appear, because a self-signed certificate is not chained to a public CA.
+
+> The `.pfx`, `.cer`, and `installer\certs\` are git-ignored. Never commit the
+> private key or its password.
+
 ### Installing
 
 Run the Setup `.exe`. It installs to Program Files, adds a Start-menu entry

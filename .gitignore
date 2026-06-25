@@ -43,3 +43,8 @@ HIMdefinitions_*.txt
 
 # Installer build output
 installer/output/
+
+# Code-signing material (never commit private keys or exported certs)
+installer/certs/
+*.pfx
+*.cer
