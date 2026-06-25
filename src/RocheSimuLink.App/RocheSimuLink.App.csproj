@@ -7,6 +7,14 @@
     <Nullable>enable</Nullable>
     <UseWindowsForms>true</UseWindowsForms>
     <ImplicitUsings>enable</ImplicitUsings>
+
+    <!-- Product metadata, surfaced in the executable and the installer. -->
+    <AssemblyTitle>Roche SimuLink</AssemblyTitle>
+    <Product>Roche SimuLink</Product>
+    <Company>Roche</Company>
+    <Version>1.0.0</Version>
+    <AssemblyVersion>1.0.0.0</AssemblyVersion>
+    <FileVersion>1.0.0.0</FileVersion>
   </PropertyGroup>
 
   <ItemGroup>

@@ -40,3 +40,6 @@ Thumbs.db
 
 # Generated HIM definitions (ingestion output; regenerated from the bundled PDF)
 HIMdefinitions_*.txt
+
+# Installer build output
+installer/output/
