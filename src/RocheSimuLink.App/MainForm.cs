@@ -22,6 +22,32 @@ public partial class MainForm : Form
         LoadUiData();
     }
 
+    /// <summary>
+    /// Loads the Roche logo bundled next to the executable
+    /// (Assets/roche-logo.png). Returns null if the file is missing or
+    /// unreadable, in which case the brand area is simply blank rather than
+    /// blocking startup.
+    /// </summary>
+    private static Image? LoadBrandLogo()
+    {
+        try
+        {
+            var path = Path.Combine(AppContext.BaseDirectory, "Assets", "roche-logo.png");
+            if (!File.Exists(path))
+            {
+                return null;
+            }
+
+            // Copy into memory so the file isn't locked for the app's lifetime.
+            using var stream = File.OpenRead(path);
+            return Image.FromStream(stream);
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
     private void LoadUiData()
     {
         BindCatalog();
