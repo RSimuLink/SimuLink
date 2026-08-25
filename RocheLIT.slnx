@@ -1,0 +1,9 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/RocheLIT.App/RocheLIT.App.csproj" />
+    <Project Path="src/RocheLIT.Core/RocheLIT.Core.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/RocheLIT.Core.Tests/RocheLIT.Core.Tests.csproj" />
+  </Folder>
+</Solution>

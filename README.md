@@ -1,9 +1,10 @@
-# Roche SimuLink
+# Roche LIT
 
-A LIS (Laboratory Information System) connectivity simulator for Roche x800
-Data Manager instruments. It sends HL7 v2 result messages to a LIS and handles
-the order/query/acknowledgement workflows defined in the instrument's LAW
-(Laboratory Automation Workflow) profile, communicating over MLLP.
+Roche LIT (Laboratory Interfacing Tool) is a LIS (Laboratory Information
+System) connectivity tool for Roche x800 Data Manager instruments. It sends HL7
+v2 result messages to a LIS and handles the order/query/acknowledgement
+workflows defined in the instrument's LAW (Laboratory Automation Workflow)
+profile, communicating over MLLP.
 
 The assay catalog (tests, sample types, volumes) is derived from a Roche Host
 Interface Manual: a bundled manual ships as the default, and a different one can
@@ -49,16 +50,16 @@ be imported at runtime.
 
 | Path | Description |
 | --- | --- |
-| `src/RocheSimuLink.Core` | Platform-agnostic library: HL7 builders/parsers, MLLP transport, HIM ingestion, models, services. |
-| `src/RocheSimuLink.App` | WinForms desktop UI (`net10.0-windows`). |
-| `tests/RocheSimuLink.Core.Tests` | xUnit test suite for the Core library. |
+| `src/RocheLIT.Core` | Platform-agnostic library: HL7 builders/parsers, MLLP transport, HIM ingestion, models, services. |
+| `src/RocheLIT.App` | WinForms desktop UI (`net10.0-windows`). |
+| `tests/RocheLIT.Core.Tests` | xUnit test suite for the Core library. |
 | `HIMv2_1.pdf` | Host Interface Manual bundled as the default assay catalog. |
 | `HIV HL7 Example.pdf` | Reference message trace used by the result-builder tests. |
 
 ## Requirements
 
 - .NET SDK 10.0
-- The desktop app (`RocheSimuLink.App`) targets `net10.0-windows` and **runs
+- The desktop app (`RocheLIT.App`) targets `net10.0-windows` and **runs
   only on Windows**. The Core library and tests are platform-agnostic and build
   and run on Linux, macOS, and Windows.
 
@@ -67,9 +68,9 @@ be imported at runtime.
 The Core library and test suite build on any platform:
 
 ```bash
-dotnet restore RocheSimuLink.slnx
-dotnet build src/RocheSimuLink.Core/RocheSimuLink.Core.csproj
-dotnet test tests/RocheSimuLink.Core.Tests/RocheSimuLink.Core.Tests.csproj
+dotnet restore RocheLIT.slnx
+dotnet build src/RocheLIT.Core/RocheLIT.Core.csproj
+dotnet test tests/RocheLIT.Core.Tests/RocheLIT.Core.Tests.csproj
 ```
 
 > In a Gitpod/Ona environment these are available as the **Install
@@ -80,14 +81,14 @@ dotnet test tests/RocheSimuLink.Core.Tests/RocheSimuLink.Core.Tests.csproj
 On Windows:
 
 ```bash
-dotnet build src/RocheSimuLink.App/RocheSimuLink.App.csproj
+dotnet build src/RocheLIT.App/RocheLIT.App.csproj
 ```
 
 On a non-Windows host you can still compile (but not run) the WinForms project
 by enabling Windows targeting:
 
 ```bash
-dotnet build src/RocheSimuLink.App/RocheSimuLink.App.csproj -p:EnableWindowsTargeting=true
+dotnet build src/RocheLIT.App/RocheLIT.App.csproj -p:EnableWindowsTargeting=true
 ```
 
 ## Packaging a Windows installer
@@ -107,7 +108,7 @@ The **Windows installer** workflow builds the installer on a Windows runner:
 - Push a `v*` tag (e.g. `v1.0.0`) to build and attach the installer to a GitHub
   Release.
 
-The resulting `RocheSimuLink-Setup-<version>.exe` is uploaded as a build
+The resulting `RocheLIT-Setup-<version>.exe` is uploaded as a build
 artifact (and release asset for tags).
 
 ### Locally on Windows
@@ -119,7 +120,7 @@ powershell -ExecutionPolicy Bypass -File installer\build-installer.ps1 -Version 
 ```
 
 This publishes a self-contained `win-x64` build and compiles the installer to
-`installer\output\RocheSimuLink-Setup-1.0.6.exe`.
+`installer\output\RocheLIT-Setup-1.0.6.exe`.
 
 ### Code signing (optional, self-signed)
 
@@ -142,7 +143,7 @@ from a trusted CA).
 
    ```powershell
    $pw = Read-Host -AsSecureString "PFX password"
-   .\installer\build-installer.ps1 -CertPath .\installer\certs\RocheSimuLink-CodeSigning.pfx -CertPassword $pw
+   .\installer\build-installer.ps1 -CertPath .\installer\certs\RocheLIT-CodeSigning.pfx -CertPassword $pw
    ```
 
    This signs both the app executable and the final `Setup.exe`, and embeds the
@@ -168,8 +169,8 @@ from a trusted CA).
    environment, or manually in an elevated PowerShell:
 
    ```powershell
-   Import-Certificate -FilePath RocheSimuLink-CodeSigning.cer -CertStoreLocation Cert:\LocalMachine\Root
-   Import-Certificate -FilePath RocheSimuLink-CodeSigning.cer -CertStoreLocation Cert:\LocalMachine\TrustedPublisher
+   Import-Certificate -FilePath RocheLIT-CodeSigning.cer -CertStoreLocation Cert:\LocalMachine\Root
+   Import-Certificate -FilePath RocheLIT-CodeSigning.cer -CertStoreLocation Cert:\LocalMachine\TrustedPublisher
    ```
 
    A self-signed certificate is not chained to a public CA, so this trust step
@@ -187,7 +188,7 @@ and registers an uninstaller in Add/Remove Programs.
 
 ## Running the simulator
 
-Launch `RocheSimuLink.App` on Windows. From the **Settings** dialog you can:
+Launch Roche LIT on Windows. From the **Settings** dialog you can:
 
 - Configure the LIS connection — host and port for outbound results
   (default `127.0.0.1:5000`), and the local listener port for inbound orders

@@ -1,7 +1,7 @@
 #requires -Version 5.1
 <#
 .SYNOPSIS
-    Builds the Roche SimuLink Windows installer.
+    Builds the Roche LIT Windows installer.
 
 .DESCRIPTION
     Publishes the WinForms app as a self-contained, single-folder win-x64 build
@@ -43,7 +43,7 @@
 .EXAMPLE
     # Signed with a self-signed certificate:
     $pw = Read-Host -AsSecureString "PFX password"
-    .\installer\build-installer.ps1 -CertPath .\installer\certs\RocheSimuLink-CodeSigning.pfx -CertPassword $pw
+    .\installer\build-installer.ps1 -CertPath .\installer\certs\RocheLIT-CodeSigning.pfx -CertPassword $pw
 #>
 [CmdletBinding()]
 param(
@@ -118,9 +118,9 @@ function Invoke-Sign {
 
 # Resolve paths relative to the repo root (this script lives in installer/).
 $repoRoot = Split-Path -Parent $PSScriptRoot
-$appProject = Join-Path $repoRoot "src\RocheSimuLink.App\RocheSimuLink.App.csproj"
-$issScript = Join-Path $PSScriptRoot "RocheSimuLink.iss"
-$publishDir = Join-Path $repoRoot "src\RocheSimuLink.App\bin\$Configuration\net10.0-windows\win-x64\publish"
+$appProject = Join-Path $repoRoot "src\RocheLIT.App\RocheLIT.App.csproj"
+$issScript = Join-Path $PSScriptRoot "RocheLIT.iss"
+$publishDir = Join-Path $repoRoot "src\RocheLIT.App\bin\$Configuration\net10.0-windows\win-x64\publish"
 
 Write-Host "==> Publishing self-contained win-x64 build (v$Version)..." -ForegroundColor Cyan
 dotnet publish $appProject `
@@ -140,7 +140,7 @@ Write-Host "    Publish output OK (HIMv2_1.pdf present)." -ForegroundColor Green
 
 # Sign the app executable before packaging, so the installed app (and its
 # Start-menu/desktop shortcuts) carry the publisher identity too.
-$appExe = Join-Path $publishDir "RocheSimuLink.App.exe"
+$appExe = Join-Path $publishDir "RocheLIT.App.exe"
 if ($signEnabled) {
     Write-Host "==> Signing application executable..." -ForegroundColor Cyan
     Invoke-Sign -Path $appExe
@@ -170,7 +170,7 @@ if ($signEnabled -and $CertPublicPath) {
 & $iscc @isccArgs $issScript
 if ($LASTEXITCODE -ne 0) { throw "Inno Setup compilation failed." }
 
-$setupExe = Join-Path $PSScriptRoot "output\RocheSimuLink-Setup-$Version.exe"
+$setupExe = Join-Path $PSScriptRoot "output\RocheLIT-Setup-$Version.exe"
 
 # Sign the finished installer, so the UAC prompt shown when the user runs it
 # carries the publisher identity (on PCs that trust the certificate).

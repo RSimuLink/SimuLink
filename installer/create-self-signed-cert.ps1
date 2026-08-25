@@ -1,17 +1,17 @@
 #requires -Version 5.1
 <#
 .SYNOPSIS
-    Creates a self-signed code-signing certificate for Roche SimuLink.
+    Creates a self-signed code-signing certificate for Roche LIT.
 
 .DESCRIPTION
     Generates a self-signed code-signing certificate whose subject is
     "Roche Diagnostics International", then exports two files:
 
-      * <OutDir>\RocheSimuLink-CodeSigning.pfx  (private key, password-protected)
+      * <OutDir>\RocheLIT-CodeSigning.pfx  (private key, password-protected)
             Used to SIGN the app and installer in build-installer.ps1.
             Keep this file and its password secret.
 
-      * <OutDir>\RocheSimuLink-CodeSigning.cer  (public certificate, no key)
+      * <OutDir>\RocheLIT-CodeSigning.cer  (public certificate, no key)
             Install this on each target PC's "Trusted Root Certification
             Authorities" (and "Trusted Publishers") store so Windows trusts
             the signature and stops showing "Unknown publisher".
@@ -66,8 +66,8 @@ if (-not (Test-Path $OutDir)) {
     New-Item -ItemType Directory -Path $OutDir | Out-Null
 }
 
-$pfxPath = Join-Path $OutDir "RocheSimuLink-CodeSigning.pfx"
-$cerPath = Join-Path $OutDir "RocheSimuLink-CodeSigning.cer"
+$pfxPath = Join-Path $OutDir "RocheLIT-CodeSigning.pfx"
+$cerPath = Join-Path $OutDir "RocheLIT-CodeSigning.cer"
 
 Write-Host "==> Creating self-signed code-signing certificate ('$Subject')..." -ForegroundColor Cyan
 $cert = New-SelfSignedCertificate `
