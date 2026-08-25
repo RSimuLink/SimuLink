@@ -26,7 +26,9 @@ namespace RocheLIT.HL7.Law
             ResultStatus status,
             ConnectionSettings settings,
             DateTimeOffset? timestamp = null,
-            string sampleVolume = "")
+            string sampleVolume = "",
+            string rackId = "",
+            string carrierPosition = "")
         {
             ArgumentNullException.ThrowIfNull(sampleType);
             ArgumentNullException.ThrowIfNull(test);
@@ -79,6 +81,8 @@ namespace RocheLIT.HL7.Law
                     SpecimenType = CodedElement.Parse(
                         sampleType.SpecimenCode.Length > 0 ? sampleType.SpecimenCode : sampleType.Hl7Code),
                     Role = "P",
+                    CarrierId = rackId.Trim(),
+                    CarrierPosition = carrierPosition.Trim(),
                 },
                 Tests =
                 {

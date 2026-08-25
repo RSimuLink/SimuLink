@@ -145,6 +145,32 @@ public class ExampleGeneratorTests
     }
 
     [Fact]
+    public void TestResult_DefaultsBlankRackAndCarrierPositionInExamples()
+    {
+        var gen = new ExampleGenerator(Settings());
+        var msg = Assert.Single(
+            gen.Generate(Input(), new[] { ExampleWorkflow.Lab29TestResult }, When));
+        var sac = msg.RawMessage.Split('\r').First(s => s.StartsWith("SAC"));
+
+        Assert.Equal("SAC|||$0E0EYXDR|||||||0000|0", sac);
+    }
+
+    [Fact]
+    public void TestResult_UsesProvidedRackAndCarrierPositionInExamples()
+    {
+        var input = Input();
+        input.RackId = "RACK12";
+        input.CarrierPosition = "7";
+
+        var gen = new ExampleGenerator(Settings());
+        var msg = Assert.Single(
+            gen.Generate(input, new[] { ExampleWorkflow.Lab29TestResult }, When));
+        var sac = msg.RawMessage.Split('\r').First(s => s.StartsWith("SAC"));
+
+        Assert.Equal("SAC|||$0E0EYXDR|||||||RACK12|7", sac);
+    }
+
+    [Fact]
     public void ControlResult_UsesQcSpecimenRole()
     {
         var gen = new ExampleGenerator(Settings());

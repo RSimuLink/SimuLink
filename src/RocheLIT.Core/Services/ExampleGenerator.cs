@@ -195,6 +195,8 @@ namespace RocheLIT.Services
                     ? input.SampleType.SpecimenCode
                     : input.SampleType.Hl7Code),
             Role = role,
+            CarrierId = ExampleRackId(input),
+            CarrierPosition = ExampleCarrierPosition(input),
         };
 
         private LawResultMessage ResultMessage(
@@ -210,8 +212,10 @@ namespace RocheLIT.Services
                 input.ResultFlag,
                 input.ResultStatus,
                 _settings,
-                when,
-                input.SampleVolume);
+                timestamp: when,
+                sampleVolume: input.SampleVolume,
+                rackId: ExampleRackId(input),
+                carrierPosition: ExampleCarrierPosition(input));
 
             message.Specimen.Role = role;
             foreach (var test in message.Tests)
@@ -228,6 +232,12 @@ namespace RocheLIT.Services
 
         private static string FormatTimestamp(DateTimeOffset when) =>
             when.ToString("yyyyMMddHHmmsszzz", CultureInfo.InvariantCulture).Replace(":", string.Empty);
+
+        private static string ExampleRackId(ExampleGeneratorInput input) =>
+            string.IsNullOrWhiteSpace(input.RackId) ? "0000" : input.RackId.Trim();
+
+        private static string ExampleCarrierPosition(ExampleGeneratorInput input) =>
+            string.IsNullOrWhiteSpace(input.CarrierPosition) ? "0" : input.CarrierPosition.Trim();
 
     }
 }

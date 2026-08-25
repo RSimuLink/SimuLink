@@ -162,9 +162,13 @@ public class LawResultMessageFactoryTests
             ResultStatus.Final,
             Settings,
             When,
-            "150 uL");
+            "150 uL",
+            rackId: "RACK9",
+            carrierPosition: "12");
 
         var observation = Assert.Single(msg.Tests[0].Observations);
+        Assert.Equal("RACK9", msg.Specimen.CarrierId);
+        Assert.Equal("12", msg.Specimen.CarrierPosition);
         Assert.Equal("Reactive", observation.Value);
         Assert.Equal("RR", observation.Interpretation!.Identifier);
         Assert.Equal("99ROC", observation.Interpretation.CodingSystem);

@@ -23,6 +23,12 @@ namespace RocheLIT.Models.Workflows
         /// <summary>The selected sample volume (e.g. "500 uL"); may be empty.</summary>
         public string SampleVolume { get; set; } = string.Empty;
 
+        /// <summary>Rack ID mapped to SAC-10. Defaults to 0000 in generated examples when blank.</summary>
+        public string RackId { get; set; } = string.Empty;
+
+        /// <summary>Position in carrier mapped to SAC-11. Defaults to 0 in generated examples when blank.</summary>
+        public string CarrierPosition { get; set; } = string.Empty;
+
         /// <summary>The result value (OBX-5).</summary>
         public string ResultValue { get; set; } = string.Empty;
 

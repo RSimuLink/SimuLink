@@ -177,7 +177,9 @@ public partial class MainForm : Form
             ResultFlag.Normal,
             status,
             _settings.Connection,
-            sampleVolume: cmbSampleVolume.SelectedItem?.ToString() ?? string.Empty);
+            sampleVolume: cmbSampleVolume.SelectedItem?.ToString() ?? string.Empty,
+            rackId: txtRackId.Text,
+            carrierPosition: txtCarrierPosition.Text);
         ApplyReceivedOrderContext(resultMessage, sampleId);
         var message = LawOulR22Builder.Build(resultMessage);
 
@@ -225,6 +227,8 @@ public partial class MainForm : Form
             Target = test.Targets.Count > 0 ? test.Targets[0] : null,
             SampleType = sampleType,
             SampleVolume = cmbSampleVolume.SelectedItem?.ToString() ?? string.Empty,
+            RackId = txtRackId.Text.Trim(),
+            CarrierPosition = txtCarrierPosition.Text.Trim(),
             ResultValue = value,
             ResultStatus = (ResultStatus)(cmbResultStatus.SelectedItem ?? ResultStatus.Final),
             ResultFlag = ResultFlag.Normal,
@@ -251,7 +255,10 @@ public partial class MainForm : Form
 
     private void ApplyReceivedOrderContext(LawResultMessage resultMessage, string sampleId)
     {
-        if (_lastReceivedOrder is null || !SameSample(_lastReceivedOrder.SampleId, sampleId))
+        if (resultMessage.Specimen.CarrierId.Length > 0 ||
+            resultMessage.Specimen.CarrierPosition.Length > 0 ||
+            _lastReceivedOrder is null ||
+            !SameSample(_lastReceivedOrder.SampleId, sampleId))
         {
             return;
         }
@@ -264,6 +271,26 @@ public partial class MainForm : Form
     {
         var received = receivedSampleId.Split('&', 2)[0].Trim();
         return string.Equals(received, sentSampleId.Trim(), StringComparison.OrdinalIgnoreCase);
+    }
+
+    private void txtRackId_TextChanged(object? sender, EventArgs e) =>
+        KeepAllowedCharacters(txtRackId, char.IsLetterOrDigit);
+
+    private void txtCarrierPosition_TextChanged(object? sender, EventArgs e) =>
+        KeepAllowedCharacters(txtCarrierPosition, char.IsDigit);
+
+    private static void KeepAllowedCharacters(TextBox textBox, Func<char, bool> allowed)
+    {
+        var original = textBox.Text;
+        var cleaned = new string(original.Where(allowed).ToArray());
+        if (cleaned == original)
+        {
+            return;
+        }
+
+        var selectionStart = Math.Min(textBox.SelectionStart, cleaned.Length);
+        textBox.Text = cleaned;
+        textBox.SelectionStart = selectionStart;
     }
 
     // --- Activity log -------------------------------------------------------

@@ -42,6 +42,10 @@ partial class MainForm
         cmbSampleType = new ComboBox();
         lblSampleVolume = new Label();
         cmbSampleVolume = new ComboBox();
+        lblRackId = new Label();
+        txtRackId = new TextBox();
+        lblCarrierPosition = new Label();
+        txtCarrierPosition = new TextBox();
         lblResultStatus = new Label();
         cmbResultStatus = new ComboBox();
         btnSendResult = new Button();
@@ -174,6 +178,10 @@ partial class MainForm
         grpSend.Controls.Add(cmbSampleType);
         grpSend.Controls.Add(lblSampleVolume);
         grpSend.Controls.Add(cmbSampleVolume);
+        grpSend.Controls.Add(lblRackId);
+        grpSend.Controls.Add(txtRackId);
+        grpSend.Controls.Add(lblCarrierPosition);
+        grpSend.Controls.Add(txtCarrierPosition);
         grpSend.Controls.Add(lblResultStatus);
         grpSend.Controls.Add(cmbResultStatus);
         grpSend.Controls.Add(btnSendResult);
@@ -221,10 +229,28 @@ partial class MainForm
         cmbSampleVolume.DropDownStyle = ComboBoxStyle.DropDownList;
         cmbSampleVolume.Name = "cmbSampleVolume";
 
+        lblRackId.AutoSize = true;
+        lblRackId.Location = new Point(16, 216);
+        lblRackId.Text = "Rack ID (Optional):";
+        txtRackId.Location = new Point(220, 213);
+        txtRackId.Size = new Size(230, 27);
+        txtRackId.MaxLength = 80;
+        txtRackId.Name = "txtRackId";
+        txtRackId.TextChanged += txtRackId_TextChanged;
+
+        lblCarrierPosition.AutoSize = true;
+        lblCarrierPosition.Location = new Point(16, 252);
+        lblCarrierPosition.Text = "Position in carrier (Optional):";
+        txtCarrierPosition.Location = new Point(220, 249);
+        txtCarrierPosition.Size = new Size(230, 27);
+        txtCarrierPosition.MaxLength = 16;
+        txtCarrierPosition.Name = "txtCarrierPosition";
+        txtCarrierPosition.TextChanged += txtCarrierPosition_TextChanged;
+
         lblResultStatus.AutoSize = true;
-        lblResultStatus.Location = new Point(16, 216);
+        lblResultStatus.Location = new Point(16, 288);
         lblResultStatus.Text = "Result Status:";
-        cmbResultStatus.Location = new Point(150, 213);
+        cmbResultStatus.Location = new Point(150, 285);
         cmbResultStatus.Size = new Size(150, 27);
         cmbResultStatus.DropDownStyle = ComboBoxStyle.DropDownList;
         cmbResultStatus.Name = "cmbResultStatus";
@@ -232,8 +258,8 @@ partial class MainForm
         btnSendResult.BackColor = Color.FromArgb(0, 102, 204);
         btnSendResult.ForeColor = Color.White;
         btnSendResult.FlatStyle = FlatStyle.Flat;
-        btnSendResult.Location = new Point(150, 264);
-        btnSendResult.Size = new Size(300, 40);
+        btnSendResult.Location = new Point(150, 318);
+        btnSendResult.Size = new Size(300, 32);
         btnSendResult.Name = "btnSendResult";
         btnSendResult.Text = "Send Results to LIS";
         btnSendResult.UseVisualStyleBackColor = false;
@@ -385,6 +411,10 @@ partial class MainForm
     private ComboBox cmbSampleType;
     private Label lblSampleVolume;
     private ComboBox cmbSampleVolume;
+    private Label lblRackId;
+    private TextBox txtRackId;
+    private Label lblCarrierPosition;
+    private TextBox txtCarrierPosition;
     private Label lblResultStatus;
     private ComboBox cmbResultStatus;
     private Button btnSendResult;
