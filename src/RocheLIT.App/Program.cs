@@ -17,7 +17,7 @@ static class Program
         splash.Update();
 
         var mainForm = new MainForm();
-        Thread.Sleep(1500);
+        Thread.Sleep(2000);
 
         splash.Close();
         Application.Run(mainForm);
