@@ -30,13 +30,16 @@ namespace RocheLIT.Models.Law
         /// <summary>OBX-11 result status (e.g. "F").</summary>
         public string ResultStatus { get; set; } = "F";
 
-        /// <summary>OBX-17 observation method / instrument (e.g. c6800^Roche~c6800.504^Roche).</summary>
+        /// <summary>OBX-16 responsible observer (e.g. X800DMSYSTEM).</summary>
+        public string ResponsibleObserver { get; set; } = string.Empty;
+
+        /// <summary>OBX-18 equipment instance / observation method (e.g. c6800^Roche~c6800.504^Roche).</summary>
         public string ObservationMethod { get; set; } = string.Empty;
 
         /// <summary>OBX-19 analysis date/time (yyyyMMddHHmmss).</summary>
         public string AnalysisDateTime { get; set; } = string.Empty;
 
-        /// <summary>OBX-21 result instance / equipment id (e.g. 6-504-241029-0092).</summary>
+        /// <summary>OBX-21 analysis run / result instance id (e.g. 6-504-241029-0092).</summary>
         public string EquipmentInstanceId { get; set; } = string.Empty;
 
         /// <summary>OBX-29 observation type (e.g. "RSLT").</summary>

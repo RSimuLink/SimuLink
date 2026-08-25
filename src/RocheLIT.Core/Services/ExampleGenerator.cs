@@ -96,7 +96,7 @@ namespace RocheLIT.Services
                             TransactionDateTime = when.ToString("yyyyMMddHHmmss"),
                             PlacerOrderNumber = "1",
                             TestCode = CodedElement.Parse(input.Test.UniversalServiceIdentifier),
-                            ConsumptionVolume = ConsumptionVolume(input.SampleVolume),
+                            ConsumptionVolume = LawResultMessageFactory.FormatConsumptionVolume(input.SampleVolume),
                         },
                     },
                 }));
@@ -210,14 +210,16 @@ namespace RocheLIT.Services
                 input.ResultFlag,
                 input.ResultStatus,
                 _settings,
-                when);
+                when,
+                input.SampleVolume);
 
             message.Specimen.Role = role;
             foreach (var test in message.Tests)
             {
                 if (string.IsNullOrEmpty(test.ConsumptionVolume))
                 {
-                    test.ConsumptionVolume = ConsumptionVolume(input.SampleVolume);
+                    test.ConsumptionVolume =
+                        LawResultMessageFactory.FormatConsumptionVolume(input.SampleVolume);
                 }
             }
 
@@ -227,26 +229,5 @@ namespace RocheLIT.Services
         private static string FormatTimestamp(DateTimeOffset when) =>
             when.ToString("yyyyMMddHHmmsszzz", CultureInfo.InvariantCulture).Replace(":", string.Empty);
 
-        /// <summary>
-        /// Converts a UI sample-volume label (e.g. "500 uL", "200uL") into the
-        /// HL7 UCUM consumption form "500^uL&amp;&amp;UCUM". Returns empty when no
-        /// numeric volume can be read, so the TCD volume field is simply omitted.
-        /// </summary>
-        private static string ConsumptionVolume(string volume)
-        {
-            if (string.IsNullOrWhiteSpace(volume))
-            {
-                return string.Empty;
-            }
-
-            var digits = new string(volume.TakeWhile(c => char.IsDigit(c) || c == '.').ToArray());
-            if (digits.Length == 0)
-            {
-                // Fall back to the first run of digits anywhere in the label.
-                digits = new string(volume.Where(char.IsDigit).ToArray());
-            }
-
-            return digits.Length == 0 ? string.Empty : $"{digits}^uL&&UCUM";
-        }
     }
 }

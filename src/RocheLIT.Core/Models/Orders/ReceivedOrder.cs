@@ -21,6 +21,12 @@ namespace RocheLIT.Models.Orders
         /// <summary>Sample/consumption volume received in TCD-9.</summary>
         public string SampleVolume { get; set; } = string.Empty;
 
+        /// <summary>Container carrier id received in SAC-10.</summary>
+        public string CarrierId { get; set; } = string.Empty;
+
+        /// <summary>Container carrier position received in SAC-11.</summary>
+        public string CarrierPosition { get; set; } = string.Empty;
+
         /// <summary>Tests requested in this order.</summary>
         public List<OrderedTest> Tests { get; set; } = new();
 

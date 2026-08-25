@@ -10,6 +10,7 @@ public class OrderParserTests
         "PID|1||789456123^^^LIS||Johnson^Emily||19850825|F\r" +
         "ORC|NW|123987654|||||S\r" +
         "SPM|1|789456123||PLAS\r" +
+        "SAC|||789456123|||||||1897|5\r" +
         "OBR|1|789456123||HPV^HPV Typing^L|||||||||||||||||||||||R\r" +
         "TCD|HPV^HPV Typing^L||||||||500^uL&&UCUM\r" +
         "OBR|2|789456123||HCV^Hepatitis C^L|||||||||||||||||||||||S";
@@ -32,6 +33,8 @@ public class OrderParserTests
         Assert.Equal("HPV Typing, Hepatitis C", order.TestType);
         Assert.Equal("PLAS", order.SampleType);
         Assert.Equal("500^uL&&UCUM", order.SampleVolume);
+        Assert.Equal("1897", order.CarrierId);
+        Assert.Equal("5", order.CarrierPosition);
     }
 
     [Fact]

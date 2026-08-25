@@ -7,7 +7,7 @@ namespace RocheLIT.HL7.Law
     /// Builds an x800DM IHE-LAW Test Result (OUL^R22) message.
     ///
     /// Segment order per the Host Interface Manual / observed trace:
-    ///   MSH, SPM, SAC, (per test: OBR, ORC, TCD, OBX*, INV*)
+    ///   MSH, SPM, SAC, (per test: OBR, ORC, OBX, TCD, INV*, OBX*)
     /// </summary>
     public static class LawOulR22Builder
     {
@@ -28,19 +28,24 @@ namespace RocheLIT.HL7.Law
             {
                 segments.Add(BuildObr(test));
                 segments.Add(BuildOrc(test));
+                if (test.Observations.Count > 0)
+                {
+                    segments.Add(BuildObx(test.Observations[0]));
+                }
+
                 if (!string.IsNullOrEmpty(test.ConsumptionVolume))
                 {
                     segments.Add(BuildTcd(test));
                 }
 
-                foreach (var obx in test.Observations)
-                {
-                    segments.Add(BuildObx(obx));
-                }
-
                 foreach (var inv in test.Reagents)
                 {
                     segments.Add(BuildInv(inv));
+                }
+
+                foreach (var obx in test.Observations.Skip(1))
+                {
+                    segments.Add(BuildObx(obx));
                 }
             }
 
@@ -67,13 +72,11 @@ namespace RocheLIT.HL7.Law
             .Render();
 
         private static string BuildObr(LawTestResult t) => new LawField("OBR")
-            .Set(2, t.SetId)
             .Set(4, t.TestCode.ToHl7())
             .Render();
 
         private static string BuildOrc(LawTestResult t) => new LawField("ORC")
             .Set(1, t.OrderControl)
-            .Set(2, t.SetId)
             .Set(5, t.OrderStatus)
             .Render();
 
@@ -91,9 +94,10 @@ namespace RocheLIT.HL7.Law
             .Set(6, o.Units?.ToHl7() ?? string.Empty)
             .Set(8, o.Interpretation?.ToHl7() ?? string.Empty)
             .Set(11, o.ResultStatus)
-            .Set(16, o.ObservationMethod)
-            .Set(18, o.AnalysisDateTime)
-            .Set(20, o.EquipmentInstanceId)
+            .Set(16, o.ResponsibleObserver)
+            .Set(18, o.ObservationMethod)
+            .Set(19, o.AnalysisDateTime)
+            .Set(21, o.EquipmentInstanceId)
             .Set(29, o.ObservationType)
             .Render();
 

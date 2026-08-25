@@ -1,6 +1,7 @@
 using RocheLIT.HL7.Law;
 using RocheLIT.Logging;
 using RocheLIT.Models;
+using RocheLIT.Models.Law;
 using RocheLIT.Models.Orders;
 using RocheLIT.Models.Workflows;
 using RocheLIT.Services;
@@ -12,6 +13,7 @@ public partial class MainForm : Form
     private readonly LitSettings _settings;
     private readonly ActivityLog _log = new();
     private LisConnectionService? _connection;
+    private ReceivedOrder? _lastReceivedOrder;
 
     public MainForm()
     {
@@ -167,7 +169,16 @@ public partial class MainForm : Form
         var status = (ResultStatus)(cmbResultStatus.SelectedItem ?? ResultStatus.Final);
 
         var resultMessage = LawResultMessageFactory.Create(
-            sampleId, sampleType!, test, target, value, ResultFlag.Normal, status, _settings.Connection);
+            sampleId,
+            sampleType!,
+            test,
+            target,
+            value,
+            ResultFlag.Normal,
+            status,
+            _settings.Connection,
+            sampleVolume: cmbSampleVolume.SelectedItem?.ToString() ?? string.Empty);
+        ApplyReceivedOrderContext(resultMessage, sampleId);
         var message = LawOulR22Builder.Build(resultMessage);
 
         try
@@ -224,6 +235,7 @@ public partial class MainForm : Form
 
     private void ShowOrder(ReceivedOrder order)
     {
+        _lastReceivedOrder = order;
         txtOrderNumber.Text = order.OrderNumber;
         txtRecvSampleId.Text = order.SampleId;
         txtReceivedTestType.Text = order.TestType;
@@ -235,6 +247,23 @@ public partial class MainForm : Form
         {
             gridOrders.Rows.Add(test.TestCode, test.TestName, test.Priority);
         }
+    }
+
+    private void ApplyReceivedOrderContext(LawResultMessage resultMessage, string sampleId)
+    {
+        if (_lastReceivedOrder is null || !SameSample(_lastReceivedOrder.SampleId, sampleId))
+        {
+            return;
+        }
+
+        resultMessage.Specimen.CarrierId = _lastReceivedOrder.CarrierId;
+        resultMessage.Specimen.CarrierPosition = _lastReceivedOrder.CarrierPosition;
+    }
+
+    private static bool SameSample(string receivedSampleId, string sentSampleId)
+    {
+        var received = receivedSampleId.Split('&', 2)[0].Trim();
+        return string.Equals(received, sentSampleId.Trim(), StringComparison.OrdinalIgnoreCase);
     }
 
     // --- Activity log -------------------------------------------------------

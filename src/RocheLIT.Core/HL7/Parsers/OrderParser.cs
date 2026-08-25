@@ -36,6 +36,18 @@ namespace RocheLIT.HL7.Parsers
             order.SampleId = Coalesce(spm?.Field(2) ?? string.Empty, firstObr?.Field(3) ?? string.Empty);
             order.SampleType = spm?.Field(4) ?? string.Empty;
 
+            var sac = message.Segment("SAC");
+            if (sac is not null)
+            {
+                if (order.SampleId.Length == 0)
+                {
+                    order.SampleId = sac.Field(3);
+                }
+
+                order.CarrierId = sac.Field(10);
+                order.CarrierPosition = sac.Field(11);
+            }
+
             var defaultPriority = orc is not null ? NormalizePriority(orc.Field(7)) : string.Empty;
 
             foreach (var obr in message.AllSegments("OBR"))

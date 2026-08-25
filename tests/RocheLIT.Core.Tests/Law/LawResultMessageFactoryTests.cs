@@ -44,6 +44,22 @@ public class LawResultMessageFactoryTests
         },
     };
 
+    private static TestType WnvTest() => new()
+    {
+        Name = "WNV",
+        UniversalServiceIdentifier = "74857-4^WNV^LN",
+        Targets =
+        {
+            new Target
+            {
+                Name = "WNV",
+                ObservationIdentifier = "WNV^WNV^99ROC",
+                ObservationValues = { "RR", "NR" },
+                InterpretationCodes = { "Reactive", "Non-Reactive" },
+            },
+        },
+    };
+
     [Fact]
     public void Create_MapsSpecimenAndTestCode()
     {
@@ -125,6 +141,36 @@ public class LawResultMessageFactoryTests
             ResultFlag.High, ResultStatus.Final, Settings, When);
 
         Assert.Equal("20241029172920+0100", msg.MessageDateTime);
+    }
+
+    [Fact]
+    public void Create_MapsManualResultCodeToObxValueAndInterpretation()
+    {
+        var test = WnvTest();
+        var msg = LawResultMessageFactory.Create(
+            "$ABC123456",
+            new SampleType
+            {
+                DisplayName = "Cadaveric Plasma",
+                Hl7Code = "CP",
+                SpecimenCode = "CP^cadavericPlasma^99ROC",
+            },
+            test,
+            test.Targets[0],
+            "RR",
+            ResultFlag.Normal,
+            ResultStatus.Final,
+            Settings,
+            When,
+            "150 uL");
+
+        var observation = Assert.Single(msg.Tests[0].Observations);
+        Assert.Equal("Reactive", observation.Value);
+        Assert.Equal("RR", observation.Interpretation!.Identifier);
+        Assert.Equal("99ROC", observation.Interpretation.CodingSystem);
+        Assert.Equal("X800DMSYSTEM", observation.ResponsibleObserver);
+        Assert.Equal("c6800^Roche~c6800.504^Roche", observation.ObservationMethod);
+        Assert.Equal("150^uL&&UCUM", msg.Tests[0].ConsumptionVolume);
     }
 
     [Fact]

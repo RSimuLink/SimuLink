@@ -1,4 +1,5 @@
 using RocheLIT.HL7.Law;
+using RocheLIT.Models;
 using RocheLIT.Models.Law;
 using Xunit;
 
@@ -45,6 +46,7 @@ public class LawOulR22BuilderTests
                         Units = new CodedElement("10*2.{copies}/mL", "", "UCUM"),
                         Interpretation = new CodedElement("VAL", "", "99ROC"),
                         ResultStatus = "F",
+                        ResponsibleObserver = "X800DMSYSTEM",
                         ObservationMethod = "c6800^Roche~c6800.504^Roche",
                         AnalysisDateTime = "20241029172920",
                         EquipmentInstanceId = "6-504-241029-0092",
@@ -104,7 +106,7 @@ public class LawOulR22BuilderTests
         var msg = LawOulR22Builder.Build(BuildHivMessage());
         var obr = Segments(msg.RawMessage).First(s => s.StartsWith("OBR"));
 
-        Assert.Equal("OBR||1||70241-5^HIV^LN", obr);
+        Assert.Equal("OBR||||70241-5^HIV^LN", obr);
     }
 
     [Fact]
@@ -113,7 +115,7 @@ public class LawOulR22BuilderTests
         var msg = LawOulR22Builder.Build(BuildHivMessage());
         var orc = Segments(msg.RawMessage).First(s => s.StartsWith("ORC"));
 
-        Assert.Equal("ORC|SC|1|||CM", orc);
+        Assert.Equal("ORC|SC||||CM", orc);
     }
 
     [Fact]
@@ -133,7 +135,7 @@ public class LawOulR22BuilderTests
 
         Assert.Equal(
             "OBX|1|NM|HIV^HIV^99ROC|1|130|10*2.{copies}/mL^^UCUM||VAL^^99ROC|||F|||||" +
-            "c6800^Roche~c6800.504^Roche||20241029172920||6-504-241029-0092|||||||||RSLT",
+            "X800DMSYSTEM||c6800^Roche~c6800.504^Roche|20241029172920||6-504-241029-0092||||||||RSLT",
             obx);
     }
 
@@ -149,13 +151,78 @@ public class LawOulR22BuilderTests
     }
 
     [Fact]
-    public void Build_SegmentOrderIsMshSpmSacObrOrcTcdObxInv()
+    public void Build_SegmentOrderIsMshSpmSacObrOrcObxTcdInv()
     {
         var msg = LawOulR22Builder.Build(BuildHivMessage());
         var names = Segments(msg.RawMessage).Select(s => s[..3]).ToArray();
 
         Assert.Equal(
-            new[] { "MSH", "SPM", "SAC", "OBR", "ORC", "TCD", "OBX", "INV" },
+            new[] { "MSH", "SPM", "SAC", "OBR", "ORC", "OBX", "TCD", "INV" },
             names);
+    }
+
+    [Fact]
+    public void Build_WnvLab29MatchesExpectedTraceShape()
+    {
+        var test = new TestType
+        {
+            Name = "WNV",
+            UniversalServiceIdentifier = "74857-4^WNV^LN",
+            Targets =
+            {
+                new Target
+                {
+                    Name = "WNV",
+                    ObservationIdentifier = "WNV^WNV^99ROC",
+                    ObservationValues = { "RR", "NR" },
+                    InterpretationCodes = { "Reactive", "Non-Reactive" },
+                },
+            },
+        };
+        var sampleType = new SampleType
+        {
+            DisplayName = "Cadaveric Plasma",
+            Hl7Code = "CP",
+            SpecimenCode = "CP^cadavericPlasma^99ROC",
+        };
+        var settings = new ConnectionSettings
+        {
+            SendingApplication = "X800DM",
+            ReceivingApplication = "Host",
+        };
+        var message = LawResultMessageFactory.Create(
+            "$ABC123456",
+            sampleType,
+            test,
+            test.Targets[0],
+            "RR",
+            ResultFlag.Normal,
+            ResultStatus.Final,
+            settings,
+            new DateTimeOffset(2026, 8, 25, 16, 34, 23, TimeSpan.FromHours(2)),
+            "150 uL");
+        message.MessageControlId = "58d7b2d9-690e-4b19-b6bb-bf9572bf27ec";
+        message.Specimen.CarrierId = "1897";
+        message.Specimen.CarrierPosition = "5";
+        message.Tests[0].Observations[0].EquipmentInstanceId = "6-504-241107-0115";
+        message.Tests[0].Reagents.Add(new ReagentInventory
+        {
+            SubstanceId = new CodedElement("Wash reagent", "", "99ROC"),
+            Status = new CodedElement("OK", "", "HL70383"),
+            SubstanceType = new CodedElement("LI", "", "HL70384"),
+            ExpiryDateTime = "20260228225959+0100",
+            LotNumber = "M03540",
+        });
+
+        var segments = Segments(LawOulR22Builder.Build(message).RawMessage);
+
+        Assert.Equal("MSH|^~\\&|X800DM||Host||20260825163423+0200||OUL^R22^OUL_R22|58d7b2d9-690e-4b19-b6bb-bf9572bf27ec|P|2.5.1|||NE|AL||UNICODE UTF-8|||LAB-29^IHE", segments[0]);
+        Assert.Equal("SPM|1|$ABC123456&ROCHE||CP^cadavericPlasma^99ROC|||||||P^^HL70369", segments[1]);
+        Assert.Equal("SAC|||$ABC123456|||||||1897|5", segments[2]);
+        Assert.Equal("OBR||||74857-4^WNV^LN", segments[3]);
+        Assert.Equal("ORC|SC||||CM", segments[4]);
+        Assert.Equal("OBX|1|ST|WNV^WNV^99ROC|1|Reactive|||RR^^99ROC|||F|||||X800DMSYSTEM||c6800^Roche~c6800.504^Roche|20260825163423||6-504-241107-0115||||||||RSLT", segments[5]);
+        Assert.Equal("TCD|74857-4^WNV^LN||||||||150^uL&&UCUM", segments[6]);
+        Assert.Equal("INV|Wash reagent^^99ROC|OK^^HL70383|LI^^HL70384|||||||||20260228225959+0100||||M03540", segments[7]);
     }
 }
