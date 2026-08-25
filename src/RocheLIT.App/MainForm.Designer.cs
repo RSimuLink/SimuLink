@@ -337,7 +337,7 @@ partial class MainForm
         //
         AutoScaleDimensions = new SizeF(7F, 15F);
         AutoScaleMode = AutoScaleMode.Font;
-        ClientSize = new Size(1076, 656);
+        ClientSize = AppLayout.MainWindowClientSize;
         Controls.Add(grpLog);
         Controls.Add(grpReceived);
         Controls.Add(grpSend);

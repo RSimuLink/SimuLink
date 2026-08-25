@@ -27,38 +27,13 @@ public partial class MainForm : Form
     /// Loads the Roche brand logo (Assets/roche-logo.png) shown on the right of
     /// the toolbar.
     /// </summary>
-    private static Image? LoadBrandLogo() => LoadAsset("roche-logo.png");
+    private static Image? LoadBrandLogo() => AppAssets.LoadImage("roche-logo.png");
 
     /// <summary>
     /// Loads the LIT product logo (Assets/LITLogo.jpg) shown on the
     /// left of the toolbar.
     /// </summary>
-    private static Image? LoadAppLogo() => LoadAsset("LITLogo.jpg");
-
-    /// <summary>
-    /// Loads an image bundled in the Assets folder next to the executable.
-    /// Returns null if the file is missing or unreadable, in which case the
-    /// area is simply blank rather than blocking startup.
-    /// </summary>
-    private static Image? LoadAsset(string fileName)
-    {
-        try
-        {
-            var path = Path.Combine(AppContext.BaseDirectory, "Assets", fileName);
-            if (!File.Exists(path))
-            {
-                return null;
-            }
-
-            // Copy into memory so the file isn't locked for the app's lifetime.
-            using var stream = File.OpenRead(path);
-            return Image.FromStream(stream);
-        }
-        catch
-        {
-            return null;
-        }
-    }
+    private static Image? LoadAppLogo() => AppAssets.LoadImage("LITLogo.jpg");
 
     private void LoadUiData()
     {
