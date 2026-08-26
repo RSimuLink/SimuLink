@@ -93,7 +93,7 @@ namespace RocheLIT.HL7.Law
             .Set(5, o.Value)
             .Set(6, o.Units?.ToHl7() ?? string.Empty)
             .Set(8, o.Interpretation?.ToHl7() ?? string.Empty)
-            .Set(11, o.ResultStatus)
+            .Set(11, o.Status)
             .Set(16, o.ResponsibleObserver)
             .Set(18, o.ObservationMethod)
             .Set(19, o.AnalysisDateTime)

@@ -88,7 +88,7 @@ public class HimEndToEndTests
 
         var resultMessage = LawResultMessageFactory.Create(
             "SID-CTNG-1", sampleType, ctng, ctng.Targets[0], "Positive",
-            ResultFlag.High, ResultStatus.Final, settings,
+            ResultFlag.High, settings,
             new DateTimeOffset(2024, 10, 29, 17, 29, 20, TimeSpan.FromHours(1)));
 
         var built = LawOulR22Builder.Build(resultMessage);

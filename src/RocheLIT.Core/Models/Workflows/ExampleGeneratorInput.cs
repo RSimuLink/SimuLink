@@ -3,7 +3,7 @@ namespace RocheLIT.Models.Workflows
     /// <summary>
     /// The values typed into the main UI that drive example generation: the same
     /// fields used when sending a real result (Sample ID, Test Type, Result,
-    /// Sample Type, Sample Volume, Result Status). No LIS connection is
+    /// Sample Type, Sample Volume). No LIS connection is
     /// required — the generator only formats messages from these inputs.
     /// </summary>
     public sealed class ExampleGeneratorInput
@@ -37,9 +37,6 @@ namespace RocheLIT.Models.Workflows
 
         /// <summary>The result value (OBX-5).</summary>
         public string ResultValue { get; set; } = string.Empty;
-
-        /// <summary>The result status (OBX-11).</summary>
-        public ResultStatus ResultStatus { get; set; } = ResultStatus.Final;
 
         /// <summary>The abnormal flag (OBX-8).</summary>
         public ResultFlag ResultFlag { get; set; } = ResultFlag.Normal;

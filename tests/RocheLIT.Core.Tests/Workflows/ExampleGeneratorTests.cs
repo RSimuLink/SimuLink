@@ -43,7 +43,6 @@ public class ExampleGeneratorTests
         },
         SampleVolume = "500 uL",
         ResultValue = "130",
-        ResultStatus = ResultStatus.Final,
         ResultFlag = ResultFlag.Normal,
     };
 

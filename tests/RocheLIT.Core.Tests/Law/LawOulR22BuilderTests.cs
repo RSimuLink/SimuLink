@@ -45,7 +45,7 @@ public class LawOulR22BuilderTests
                         Value = "130",
                         Units = new CodedElement("10*2.{copies}/mL", "", "UCUM"),
                         Interpretation = new CodedElement("VAL", "", "99ROC"),
-                        ResultStatus = "F",
+                        Status = "F",
                         ResponsibleObserver = "X800DMSYSTEM",
                         ObservationMethod = "c6800^Roche~c6800.504^Roche",
                         AnalysisDateTime = "20241029172920",
@@ -197,7 +197,6 @@ public class LawOulR22BuilderTests
             test.Targets[0],
             "RR",
             ResultFlag.Normal,
-            ResultStatus.Final,
             settings,
             new DateTimeOffset(2026, 8, 25, 16, 34, 23, TimeSpan.FromHours(2)),
             "150 uL");

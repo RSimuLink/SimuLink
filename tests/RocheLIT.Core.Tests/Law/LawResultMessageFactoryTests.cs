@@ -66,7 +66,7 @@ public class LawResultMessageFactoryTests
         var test = MultiTargetTest();
         var msg = LawResultMessageFactory.Create(
             "SID42", Plasma, test, test.Targets[0], "Positive",
-            ResultFlag.High, ResultStatus.Final, Settings, When);
+            ResultFlag.High, Settings, When);
 
         Assert.Equal("SID42", msg.Specimen.SampleId);
         Assert.Equal("PLAS", msg.Specimen.SpecimenType.Identifier);
@@ -84,7 +84,7 @@ public class LawResultMessageFactoryTests
         var test = MultiTargetTest();
         var msg = LawResultMessageFactory.Create(
             "SID42", Plasma, test, test.Targets[0], "Positive",
-            ResultFlag.High, ResultStatus.Final, Settings, When);
+            ResultFlag.High, Settings, When);
 
         var observations = msg.Tests[0].Observations;
         Assert.Equal(2, observations.Count);
@@ -100,7 +100,7 @@ public class LawResultMessageFactoryTests
         var test = MultiTargetTest();
         var msg = LawResultMessageFactory.Create(
             "SID42", Plasma, test, test.Targets[0], "Positive",
-            ResultFlag.High, ResultStatus.Final, Settings, When);
+            ResultFlag.High, Settings, When);
 
         var selected = msg.Tests[0].Observations[0];
         var other = msg.Tests[0].Observations[1];
@@ -114,16 +114,16 @@ public class LawResultMessageFactoryTests
     }
 
     [Fact]
-    public void Create_AppliesStatusAndTimestampToAllChannels()
+    public void Create_AppliesFinalStatusAndTimestampToAllChannels()
     {
         var test = MultiTargetTest();
         var msg = LawResultMessageFactory.Create(
             "SID42", Plasma, test, test.Targets[1], "Positive",
-            ResultFlag.Critical, ResultStatus.Preliminary, Settings, When);
+            ResultFlag.Critical, Settings, When);
 
         Assert.All(msg.Tests[0].Observations, o =>
         {
-            Assert.Equal("P", o.ResultStatus);
+            Assert.Equal("F", o.Status);
             Assert.Equal("20241029172920", o.AnalysisDateTime);
             Assert.Equal("RSLT", o.ObservationType);
         });
@@ -138,7 +138,7 @@ public class LawResultMessageFactoryTests
         var test = MultiTargetTest();
         var msg = LawResultMessageFactory.Create(
             "SID42", Plasma, test, test.Targets[0], "Positive",
-            ResultFlag.High, ResultStatus.Final, Settings, When);
+            ResultFlag.High, Settings, When);
 
         Assert.Equal("20241029172920+0100", msg.MessageDateTime);
     }
@@ -159,7 +159,6 @@ public class LawResultMessageFactoryTests
             test.Targets[0],
             "RR",
             ResultFlag.Normal,
-            ResultStatus.Final,
             Settings,
             When,
             "150 uL",
@@ -183,7 +182,7 @@ public class LawResultMessageFactoryTests
         var test = MultiTargetTest();
         var msg = LawResultMessageFactory.Create(
             "SID42", Plasma, test, test.Targets[0], "Positive",
-            ResultFlag.High, ResultStatus.Final, Settings, When);
+            ResultFlag.High, Settings, When);
 
         var built = LawOulR22Builder.Build(msg);
         var parsed = Hl7Parser.Parse(built.RawMessage);

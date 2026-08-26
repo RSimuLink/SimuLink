@@ -6,16 +6,6 @@ namespace RocheLIT.Core.Tests.Models;
 public class ResultCodeTests
 {
     [Theory]
-    [InlineData(ResultStatus.Preliminary, "P")]
-    [InlineData(ResultStatus.Final, "F")]
-    [InlineData(ResultStatus.Corrected, "C")]
-    [InlineData(ResultStatus.CannotObtain, "X")]
-    public void ResultStatus_MapsToHl7Code(ResultStatus status, string expected)
-    {
-        Assert.Equal(expected, status.ToHl7Code());
-    }
-
-    [Theory]
     [InlineData(ResultFlag.Normal, "N")]
     [InlineData(ResultFlag.High, "H")]
     [InlineData(ResultFlag.Low, "L")]

@@ -23,7 +23,6 @@ namespace RocheLIT.HL7.Law
             Target selectedTarget,
             string value,
             ResultFlag flag,
-            ResultStatus status,
             ConnectionSettings settings,
             DateTimeOffset? timestamp = null,
             string sampleVolume = "",
@@ -36,7 +35,7 @@ namespace RocheLIT.HL7.Law
             ArgumentNullException.ThrowIfNull(settings);
 
             var when = timestamp ?? DateTimeOffset.Now;
-            var statusCode = status.ToHl7Code();
+            const string statusCode = "F";
             var responsibleObserver = string.IsNullOrWhiteSpace(settings.SendingApplication)
                 ? string.Empty
                 : $"{settings.SendingApplication}SYSTEM";
@@ -59,7 +58,7 @@ namespace RocheLIT.HL7.Law
                     SubId = "1",
                     Value = result.Value,
                     Interpretation = result.Interpretation,
-                    ResultStatus = statusCode,
+                    Status = statusCode,
                     ResponsibleObserver = responsibleObserver,
                     ObservationMethod = "c6800^Roche~c6800.504^Roche",
                     AnalysisDateTime = when.ToString("yyyyMMddHHmmss"),

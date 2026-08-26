@@ -41,9 +41,6 @@ public partial class MainForm : Form
     {
         BindCatalog();
 
-        cmbResultStatus.DataSource = Enum.GetValues<ResultStatus>();
-        cmbResultStatus.SelectedItem = ResultStatus.Final;
-
         PopulateResults();
     }
 
@@ -166,7 +163,6 @@ public partial class MainForm : Form
         var target = test!.Targets[0];
         var value = ResultEntryPresenter.EffectiveResultValue(
             test, cmbResult.SelectedItem?.ToString());
-        var status = (ResultStatus)(cmbResultStatus.SelectedItem ?? ResultStatus.Final);
 
         var resultMessage = LawResultMessageFactory.Create(
             sampleId,
@@ -175,7 +171,6 @@ public partial class MainForm : Form
             target,
             value,
             ResultFlag.Normal,
-            status,
             _settings.Connection,
             sampleVolume: cmbSampleVolume.SelectedItem?.ToString() ?? string.Empty,
             rackId: txtRackId.Text,
@@ -232,7 +227,6 @@ public partial class MainForm : Form
             IncludeInventory = chkInventory.Checked,
             IncludeCtValues = chkCtValues.Checked,
             ResultValue = value,
-            ResultStatus = (ResultStatus)(cmbResultStatus.SelectedItem ?? ResultStatus.Final),
             ResultFlag = ResultFlag.Normal,
         };
     }

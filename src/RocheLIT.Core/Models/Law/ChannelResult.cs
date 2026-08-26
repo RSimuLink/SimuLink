@@ -27,8 +27,8 @@ namespace RocheLIT.Models.Law
         /// <summary>OBX-8 interpretation/abnormal flag, coded (e.g. VAL^^99ROC).</summary>
         public CodedElement? Interpretation { get; set; }
 
-        /// <summary>OBX-11 result status (e.g. "F").</summary>
-        public string ResultStatus { get; set; } = "F";
+        /// <summary>OBX-11 observation status (fixed "F" for final).</summary>
+        public string Status { get; set; } = "F";
 
         /// <summary>OBX-16 responsible observer (e.g. X800DMSYSTEM).</summary>
         public string ResponsibleObserver { get; set; } = string.Empty;

@@ -46,8 +46,6 @@ partial class MainForm
         txtRackId = new TextBox();
         lblCarrierPosition = new Label();
         txtCarrierPosition = new TextBox();
-        lblResultStatus = new Label();
-        cmbResultStatus = new ComboBox();
         chkInventory = new CheckBox();
         chkCtValues = new CheckBox();
         btnSendResult = new Button();
@@ -184,8 +182,6 @@ partial class MainForm
         grpSend.Controls.Add(txtRackId);
         grpSend.Controls.Add(lblCarrierPosition);
         grpSend.Controls.Add(txtCarrierPosition);
-        grpSend.Controls.Add(lblResultStatus);
-        grpSend.Controls.Add(cmbResultStatus);
         grpSend.Controls.Add(chkInventory);
         grpSend.Controls.Add(chkCtValues);
         grpSend.Controls.Add(btnSendResult);
@@ -251,28 +247,20 @@ partial class MainForm
         txtCarrierPosition.Name = "txtCarrierPosition";
         txtCarrierPosition.TextChanged += txtCarrierPosition_TextChanged;
 
-        lblResultStatus.AutoSize = true;
-        lblResultStatus.Location = new Point(16, 288);
-        lblResultStatus.Text = "Result Status:";
-        cmbResultStatus.Location = new Point(150, 285);
-        cmbResultStatus.Size = new Size(150, 27);
-        cmbResultStatus.DropDownStyle = ComboBoxStyle.DropDownList;
-        cmbResultStatus.Name = "cmbResultStatus";
-
         chkInventory.AutoSize = true;
-        chkInventory.Location = new Point(150, 320);
+        chkInventory.Location = new Point(150, 288);
         chkInventory.Name = "chkInventory";
         chkInventory.Text = "Inventory";
 
         chkCtValues.AutoSize = true;
-        chkCtValues.Location = new Point(270, 320);
+        chkCtValues.Location = new Point(270, 288);
         chkCtValues.Name = "chkCtValues";
         chkCtValues.Text = "ct values";
 
         btnSendResult.BackColor = Color.FromArgb(0, 102, 204);
         btnSendResult.ForeColor = Color.White;
         btnSendResult.FlatStyle = FlatStyle.Flat;
-        btnSendResult.Location = new Point(150, 360);
+        btnSendResult.Location = new Point(150, 330);
         btnSendResult.Size = new Size(300, 40);
         btnSendResult.Name = "btnSendResult";
         btnSendResult.Text = "Send Results to LIS";
@@ -429,8 +417,6 @@ partial class MainForm
     private TextBox txtRackId;
     private Label lblCarrierPosition;
     private TextBox txtCarrierPosition;
-    private Label lblResultStatus;
-    private ComboBox cmbResultStatus;
     private CheckBox chkInventory;
     private CheckBox chkCtValues;
     private Button btnSendResult;
