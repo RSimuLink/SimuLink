@@ -11,9 +11,6 @@ namespace RocheLIT.Models
         /// <summary>LIS port the simulator sends results to.</summary>
         public int LisPort { get; set; } = 5000;
 
-        /// <summary>Local port the simulator listens on for inbound LIS orders.</summary>
-        public int ListenPort { get; set; } = 5001;
-
         /// <summary>MSH-3 Sending Application.</summary>
         public string SendingApplication { get; set; } = "LIT";
 

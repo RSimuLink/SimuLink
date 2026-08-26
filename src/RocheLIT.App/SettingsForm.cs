@@ -5,10 +5,10 @@ using RocheLIT.Services;
 namespace RocheLIT;
 
 /// <summary>
-/// Edits <see cref="ConnectionSettings"/> (LIS host/port, listener port, and
-/// MSH identity fields) and lets the user load the assay catalog from a Host
-/// Interface Manual PDF or a portable HIMdefinitions_00x.txt file. Layout is
-/// built in code to keep the dialog simple.
+/// Edits <see cref="ConnectionSettings"/> (LIS host/port and MSH identity
+/// fields) and lets the user load the assay catalog from a Host Interface
+/// Manual PDF or a portable HIMdefinitions_00x.txt file. Layout is built in
+/// code to keep the dialog simple.
 /// </summary>
 public sealed class SettingsForm : Form
 {
@@ -17,7 +17,6 @@ public sealed class SettingsForm : Form
 
     private readonly TextBox _txtHost = new();
     private readonly NumericUpDown _numLisPort = NewPort();
-    private readonly NumericUpDown _numListenPort = NewPort();
     private readonly TextBox _txtSendingApp = new();
     private readonly TextBox _txtSendingFacility = new();
     private readonly TextBox _txtReceivingApp = new();
@@ -82,7 +81,6 @@ public sealed class SettingsForm : Form
 
         AddRow(layout, "LIS Host:", _txtHost);
         AddRow(layout, "LIS Port:", _numLisPort);
-        AddRow(layout, "LIT Listen Port:", _numListenPort);
         AddRow(layout, "Sending Application (MSH-3):", _txtSendingApp);
         AddRow(layout, "Sending Facility (MSH-4):", _txtSendingFacility);
         AddRow(layout, "Receiving Application (MSH-5):", _txtReceivingApp);
@@ -250,7 +248,6 @@ public sealed class SettingsForm : Form
     {
         _txtHost.Text = _connection.LisHost;
         _numLisPort.Value = Clamp(_connection.LisPort);
-        _numListenPort.Value = Clamp(_connection.ListenPort);
         _txtSendingApp.Text = _connection.SendingApplication;
         _txtSendingFacility.Text = _connection.SendingFacility;
         _txtReceivingApp.Text = _connection.ReceivingApplication;
@@ -276,7 +273,6 @@ public sealed class SettingsForm : Form
 
         _connection.LisHost = _txtHost.Text.Trim();
         _connection.LisPort = (int)_numLisPort.Value;
-        _connection.ListenPort = (int)_numListenPort.Value;
         _connection.SendingApplication = _txtSendingApp.Text.Trim();
         _connection.SendingFacility = _txtSendingFacility.Text.Trim();
         _connection.ReceivingApplication = _txtReceivingApp.Text.Trim();

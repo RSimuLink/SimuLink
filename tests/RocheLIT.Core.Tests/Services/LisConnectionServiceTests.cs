@@ -20,7 +20,7 @@ public class LisConnectionServiceTests
         "TCD|HPV^HPV Typing^L||||||||500^uL&&UCUM";
 
     /// <summary>A stand-in LIS that accepts one connection and ACKs each frame.</summary>
-    private static (TcpListener listener, int port) StartFakeLis()
+    private static (TcpListener listener, int port) StartFakeLis(string? messageToSendOnConnect = null)
     {
         var listener = new TcpListener(IPAddress.Loopback, 0);
         listener.Start();
@@ -32,6 +32,13 @@ public class LisConnectionServiceTests
             {
                 using var client = await listener.AcceptTcpClientAsync();
                 using var stream = client.GetStream();
+
+                if (!string.IsNullOrEmpty(messageToSendOnConnect))
+                {
+                    await stream.WriteAsync(MllpProtocol.Encode(messageToSendOnConnect));
+                    await stream.FlushAsync();
+                }
+
                 var buffer = new byte[4096];
                 var acc = new List<byte>();
                 while (true)
@@ -63,7 +70,7 @@ public class LisConnectionServiceTests
     {
         var (fakeLis, port) = StartFakeLis();
         var log = new ActivityLog();
-        var settings = new ConnectionSettings { LisHost = "127.0.0.1", LisPort = port, ListenPort = 0 };
+        var settings = new ConnectionSettings { LisHost = "127.0.0.1", LisPort = port };
         using var service = new LisConnectionService(settings, log);
 
         var states = new List<ConnectionState>();
@@ -85,7 +92,7 @@ public class LisConnectionServiceTests
     {
         var (fakeLis, port) = StartFakeLis();
         var log = new ActivityLog();
-        var settings = new ConnectionSettings { LisHost = "127.0.0.1", LisPort = port, ListenPort = 0 };
+        var settings = new ConnectionSettings { LisHost = "127.0.0.1", LisPort = port };
         using var service = new LisConnectionService(settings, log);
         await service.ConnectAsync();
 
@@ -109,9 +116,9 @@ public class LisConnectionServiceTests
     [Fact]
     public async Task IncomingOrder_RaisesOrderReceived_AndLogs()
     {
-        var (fakeLis, port) = StartFakeLis();
+        var (fakeLis, port) = StartFakeLis(Order);
         var log = new ActivityLog();
-        var settings = new ConnectionSettings { LisHost = "127.0.0.1", LisPort = port, ListenPort = 0 };
+        var settings = new ConnectionSettings { LisHost = "127.0.0.1", LisPort = port };
         using var service = new LisConnectionService(settings, log);
 
         ReceivedOrder? received = null;
@@ -119,12 +126,7 @@ public class LisConnectionServiceTests
 
         await service.ConnectAsync();
 
-        // The service is listening on an OS-assigned port; send an order to it
-        // the way a LIS would.
-        using var lisClient = new MllpClient("127.0.0.1", service.ListenPort);
-        await lisClient.SendAsync(Order);
-
-        // Allow the listener's async handler to run.
+        // Allow the connection receive loop to dispatch the LIS-sent order.
         for (var i = 0; i < 50 && received is null; i++)
         {
             await Task.Delay(20);

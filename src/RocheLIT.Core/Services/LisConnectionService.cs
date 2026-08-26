@@ -15,16 +15,15 @@ namespace RocheLIT.Services
     }
 
     /// <summary>
-    /// Coordinates the MLLP client (outbound results) and listener (inbound
-    /// orders), exposes connection state, and records activity to the log.
-    /// The UI binds Connect/Disconnect/Send to this service.
+    /// Coordinates the MLLP connection to the LIS, exposes connection state,
+    /// routes inbound orders received on that connection, and records activity
+    /// to the log. The UI binds Connect/Disconnect/Send to this service.
     /// </summary>
     public sealed class LisConnectionService : IDisposable
     {
         private readonly ConnectionSettings _settings;
         private readonly ActivityLog _log;
         private MllpClient? _client;
-        private MllpListener? _listener;
 
         public LisConnectionService(ConnectionSettings settings, ActivityLog log)
         {
@@ -33,12 +32,6 @@ namespace RocheLIT.Services
         }
 
         public ConnectionState State { get; private set; } = ConnectionState.Disconnected;
-
-        /// <summary>
-        /// The port the inbound-order listener is bound to. Reflects the
-        /// OS-assigned port when configured with 0. Zero when not listening.
-        /// </summary>
-        public int ListenPort => _listener?.Port ?? 0;
 
         /// <summary>Raised when <see cref="State"/> changes.</summary>
         public event EventHandler<ConnectionState>? StateChanged;
@@ -58,17 +51,14 @@ namespace RocheLIT.Services
             try
             {
                 _client = new MllpClient(_settings.LisHost, _settings.LisPort);
+                _client.MessageReceived += OnMessageReceived;
+                _client.Error += (_, ex) => _log.Error($"LIS connection error: {ex.Message}");
                 await _client.ConnectAsync(cancellationToken).ConfigureAwait(false);
-
-                _listener = new MllpListener(_settings.ListenPort);
-                _listener.MessageReceived += OnMessageReceived;
-                _listener.Error += (_, ex) => _log.Error($"Listener error: {ex.Message}");
-                _listener.Start();
 
                 SetState(ConnectionState.Connected);
                 _log.Success(
                     $"Connected to LIS server ({_settings.LisHost}:{_settings.LisPort}); " +
-                    $"listening for LIS orders on 0.0.0.0:{_listener.Port}.");
+                    "receiving LIS orders over the active connection.");
             }
             catch (Exception ex)
             {
@@ -80,16 +70,13 @@ namespace RocheLIT.Services
 
         public async Task DisconnectAsync()
         {
-            if (_listener is not null)
+            if (_client is not null)
             {
-                _listener.MessageReceived -= OnMessageReceived;
-                await _listener.StopAsync().ConfigureAwait(false);
-                _listener.Dispose();
-                _listener = null;
+                _client.MessageReceived -= OnMessageReceived;
+                _client.Dispose();
+                _client = null;
             }
-
-            _client?.Dispose();
-            _client = null;
+            await Task.CompletedTask.ConfigureAwait(false);
 
             if (State != ConnectionState.Disconnected)
             {

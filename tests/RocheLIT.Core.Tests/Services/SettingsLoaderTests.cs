@@ -113,7 +113,6 @@ public class SettingsLoaderTests
             {
                 LisHost = "10.0.0.50",
                 LisPort = 5010,
-                ListenPort = 5020,
                 SendingApplication = "LIT",
                 SendingFacility = "Roche",
                 ReceivingApplication = "HOST",
@@ -124,7 +123,6 @@ public class SettingsLoaderTests
 
             Assert.Equal("10.0.0.50", settings.Connection.LisHost);
             Assert.Equal(5010, settings.Connection.LisPort);
-            Assert.Equal(5020, settings.Connection.ListenPort);
             Assert.Equal("HOST", settings.Connection.ReceivingApplication);
         }
         finally
