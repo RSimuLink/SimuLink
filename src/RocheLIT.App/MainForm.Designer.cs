@@ -376,7 +376,7 @@ partial class MainForm
         MinimumSize = new Size(1092, 695);
         Name = "MainForm";
         StartPosition = FormStartPosition.CenterScreen;
-        Text = "Roche LIT";
+        Text = "Roche LIT - Laboratory Interfacing Tool";
 
         pnlToolbar.ResumeLayout(false);
         pnlToolbar.PerformLayout();

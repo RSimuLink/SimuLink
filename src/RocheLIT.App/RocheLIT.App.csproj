@@ -10,10 +10,11 @@
 
     <!-- Product metadata, surfaced in the executable and the installer. -->
     <AssemblyName>RocheLIT.App</AssemblyName>
-    <AssemblyTitle>Roche LIT</AssemblyTitle>
-    <Product>Roche LIT</Product>
+    <AssemblyTitle>Roche LIT - Laboratory Interfacing Tool</AssemblyTitle>
+    <Product>Roche LIT - Laboratory Interfacing Tool</Product>
     <Description>Laboratory Interfacing Tool</Description>
     <Company>Roche Diagnostics International</Company>
+    <ApplicationIcon>Assets\LITAppIcon.ico</ApplicationIcon>
     <Version>1.0.6</Version>
     <AssemblyVersion>1.0.6.0</AssemblyVersion>
     <FileVersion>1.0.6.0</FileVersion>

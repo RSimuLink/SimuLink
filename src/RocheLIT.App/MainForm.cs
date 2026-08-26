@@ -18,6 +18,7 @@ public partial class MainForm : Form
     public MainForm()
     {
         InitializeComponent();
+        ApplyAppIcon();
 
         _settings = SettingsLoader.Load();
         _log.EntryAdded += (_, entry) => RunOnUi(() => AppendLog(entry));
@@ -36,6 +37,15 @@ public partial class MainForm : Form
     /// left of the toolbar.
     /// </summary>
     private static Image? LoadAppLogo() => AppAssets.LoadImage("LITLogo.jpg");
+
+    private void ApplyAppIcon()
+    {
+        var appIcon = AppAssets.LoadIcon("LITAppIcon.ico");
+        if (appIcon is not null)
+        {
+            Icon = appIcon;
+        }
+    }
 
     private void LoadUiData()
     {

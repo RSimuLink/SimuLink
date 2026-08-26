@@ -21,4 +21,24 @@ internal static class AppAssets
             return null;
         }
     }
+
+    public static Icon? LoadIcon(string fileName)
+    {
+        try
+        {
+            var path = Path.Combine(AppContext.BaseDirectory, "Assets", fileName);
+            if (!File.Exists(path))
+            {
+                return null;
+            }
+
+            using var stream = File.OpenRead(path);
+            using var icon = new Icon(stream);
+            return (Icon)icon.Clone();
+        }
+        catch
+        {
+            return null;
+        }
+    }
 }

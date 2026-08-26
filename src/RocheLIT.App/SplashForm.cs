@@ -18,7 +18,7 @@ internal sealed class SplashForm : Form
         ShowIcon = false;
         ShowInTaskbar = false;
         StartPosition = FormStartPosition.CenterScreen;
-        Text = "Roche LIT";
+        Text = "Roche LIT - Laboratory Interfacing Tool";
 
         _logo = new PictureBox
         {
