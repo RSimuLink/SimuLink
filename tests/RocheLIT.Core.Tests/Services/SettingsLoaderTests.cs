@@ -1,3 +1,4 @@
+using RocheLIT.Models;
 using RocheLIT.Services;
 using Xunit;
 
@@ -93,5 +94,49 @@ public class SettingsLoaderTests
 
         var allKinds = Enum.GetValues<RocheLIT.Models.Workflows.SupportedWorkflows>();
         Assert.Equal(allKinds.Length, kinds.Count);
+    }
+
+    [Fact]
+    public void Load_UsesPersistedConnectionSettings()
+    {
+        var originalDirectory = Environment.GetEnvironmentVariable(
+            ConnectionSettingsPersistence.SettingsDirectoryEnvironmentVariable);
+        var tempDirectory = Path.Combine(Path.GetTempPath(), $"RocheLIT-{Guid.NewGuid():N}");
+
+        try
+        {
+            Environment.SetEnvironmentVariable(
+                ConnectionSettingsPersistence.SettingsDirectoryEnvironmentVariable,
+                tempDirectory);
+
+            SettingsLoader.SaveConnection(new ConnectionSettings
+            {
+                LisHost = "10.0.0.50",
+                LisPort = 5010,
+                ListenPort = 5020,
+                SendingApplication = "LIT",
+                SendingFacility = "Roche",
+                ReceivingApplication = "HOST",
+                ReceivingFacility = "Lab",
+            });
+
+            var settings = SettingsLoader.Load();
+
+            Assert.Equal("10.0.0.50", settings.Connection.LisHost);
+            Assert.Equal(5010, settings.Connection.LisPort);
+            Assert.Equal(5020, settings.Connection.ListenPort);
+            Assert.Equal("HOST", settings.Connection.ReceivingApplication);
+        }
+        finally
+        {
+            Environment.SetEnvironmentVariable(
+                ConnectionSettingsPersistence.SettingsDirectoryEnvironmentVariable,
+                originalDirectory);
+
+            if (Directory.Exists(tempDirectory))
+            {
+                Directory.Delete(tempDirectory, recursive: true);
+            }
+        }
     }
 }

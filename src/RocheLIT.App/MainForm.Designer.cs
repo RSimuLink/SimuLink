@@ -27,6 +27,8 @@ partial class MainForm
         btnConnect = new Button();
         btnDisconnect = new Button();
         btnSettings = new Button();
+        lblListenPort = new Label();
+        numListenPort = new NumericUpDown();
         picBrand = new PictureBox();
         picAppLogo = new PictureBox();
 
@@ -62,6 +64,10 @@ partial class MainForm
         txtReceivedSampleType = new TextBox();
         lblReceivedSampleVolume = new Label();
         txtReceivedSampleVolume = new TextBox();
+        lblReceivedRackId = new Label();
+        txtReceivedRackId = new TextBox();
+        lblReceivedCarrierPosition = new Label();
+        txtReceivedCarrierPosition = new TextBox();
         gridOrders = new DataGridView();
         colTestCode = new DataGridViewTextBoxColumn();
         colTestName = new DataGridViewTextBoxColumn();
@@ -74,6 +80,7 @@ partial class MainForm
         pnlToolbar.SuspendLayout();
         grpSend.SuspendLayout();
         grpReceived.SuspendLayout();
+        ((System.ComponentModel.ISupportInitialize)numListenPort).BeginInit();
         ((System.ComponentModel.ISupportInitialize)gridOrders).BeginInit();
         grpLog.SuspendLayout();
         SuspendLayout();
@@ -105,6 +112,8 @@ partial class MainForm
         pnlToolbar.Controls.Add(btnConnect);
         pnlToolbar.Controls.Add(btnDisconnect);
         pnlToolbar.Controls.Add(btnSettings);
+        pnlToolbar.Controls.Add(lblListenPort);
+        pnlToolbar.Controls.Add(numListenPort);
         pnlToolbar.Controls.Add(picBrand);
         pnlToolbar.Dock = DockStyle.Top;
         pnlToolbar.Height = 56;
@@ -128,7 +137,7 @@ partial class MainForm
         btnConnect.ForeColor = Color.White;
         btnConnect.FlatStyle = FlatStyle.Flat;
         btnConnect.Location = new Point(270, 10);
-        btnConnect.Size = new Size(160, 36);
+        btnConnect.Size = new Size(140, 36);
         btnConnect.Name = "btnConnect";
         btnConnect.Text = "Connect to LIS";
         btnConnect.UseVisualStyleBackColor = false;
@@ -137,8 +146,8 @@ partial class MainForm
         //
         // btnDisconnect
         //
-        btnDisconnect.Location = new Point(438, 10);
-        btnDisconnect.Size = new Size(140, 36);
+        btnDisconnect.Location = new Point(418, 10);
+        btnDisconnect.Size = new Size(120, 36);
         btnDisconnect.Name = "btnDisconnect";
         btnDisconnect.Text = "Disconnect";
         btnDisconnect.Enabled = false;
@@ -147,18 +156,36 @@ partial class MainForm
         //
         // btnSettings
         //
-        btnSettings.Location = new Point(586, 10);
-        btnSettings.Size = new Size(140, 36);
+        btnSettings.Location = new Point(546, 10);
+        btnSettings.Size = new Size(120, 36);
         btnSettings.Name = "btnSettings";
         btnSettings.Text = "⚙  Settings";
         btnSettings.Click += btnSettings_Click;
+
+        //
+        // lblListenPort
+        //
+        lblListenPort.AutoSize = true;
+        lblListenPort.Location = new Point(682, 18);
+        lblListenPort.Name = "lblListenPort";
+        lblListenPort.Text = "LIT Listen Port:";
+
+        //
+        // numListenPort
+        //
+        numListenPort.Location = new Point(780, 14);
+        numListenPort.Maximum = 65535;
+        numListenPort.Minimum = 1;
+        numListenPort.Size = new Size(82, 27);
+        numListenPort.Name = "numListenPort";
+        numListenPort.ValueChanged += numListenPort_ValueChanged;
 
         //
         // picBrand (Roche logo)
         //
         picBrand.Anchor = AnchorStyles.Top | AnchorStyles.Right;
         picBrand.BackColor = Color.Transparent;
-        picBrand.Location = new Point(880, 8);
+        picBrand.Location = new Point(984, 8);
         picBrand.Size = new Size(80, 40);
         picBrand.Name = "picBrand";
         picBrand.SizeMode = PictureBoxSizeMode.Zoom;
@@ -280,6 +307,10 @@ partial class MainForm
         grpReceived.Controls.Add(txtReceivedSampleType);
         grpReceived.Controls.Add(lblReceivedSampleVolume);
         grpReceived.Controls.Add(txtReceivedSampleVolume);
+        grpReceived.Controls.Add(lblReceivedRackId);
+        grpReceived.Controls.Add(txtReceivedRackId);
+        grpReceived.Controls.Add(lblReceivedCarrierPosition);
+        grpReceived.Controls.Add(txtReceivedCarrierPosition);
         grpReceived.Controls.Add(gridOrders);
         grpReceived.Location = new Point(504, 92);
         grpReceived.Size = new Size(560, 420);
@@ -327,9 +358,25 @@ partial class MainForm
         txtReceivedSampleVolume.ReadOnly = true;
         txtReceivedSampleVolume.Name = "txtReceivedSampleVolume";
 
+        lblReceivedRackId.AutoSize = true;
+        lblReceivedRackId.Location = new Point(16, 216);
+        lblReceivedRackId.Text = "Rack ID:";
+        txtReceivedRackId.Location = new Point(150, 213);
+        txtReceivedRackId.Size = new Size(220, 27);
+        txtReceivedRackId.ReadOnly = true;
+        txtReceivedRackId.Name = "txtReceivedRackId";
+
+        lblReceivedCarrierPosition.AutoSize = true;
+        lblReceivedCarrierPosition.Location = new Point(16, 252);
+        lblReceivedCarrierPosition.Text = "Position in carrier:";
+        txtReceivedCarrierPosition.Location = new Point(150, 249);
+        txtReceivedCarrierPosition.Size = new Size(220, 27);
+        txtReceivedCarrierPosition.ReadOnly = true;
+        txtReceivedCarrierPosition.Name = "txtReceivedCarrierPosition";
+
         gridOrders.Columns.AddRange(new DataGridViewColumn[] { colTestCode, colTestName, colPriority });
-        gridOrders.Location = new Point(16, 216);
-        gridOrders.Size = new Size(524, 188);
+        gridOrders.Location = new Point(16, 288);
+        gridOrders.Size = new Size(524, 116);
         gridOrders.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
         gridOrders.AllowUserToAddRows = false;
         gridOrders.ReadOnly = true;
@@ -384,6 +431,7 @@ partial class MainForm
         grpSend.PerformLayout();
         grpReceived.ResumeLayout(false);
         grpReceived.PerformLayout();
+        ((System.ComponentModel.ISupportInitialize)numListenPort).EndInit();
         ((System.ComponentModel.ISupportInitialize)gridOrders).EndInit();
         grpLog.ResumeLayout(false);
         ResumeLayout(false);
@@ -399,6 +447,8 @@ partial class MainForm
     private Button btnConnect;
     private Button btnDisconnect;
     private Button btnSettings;
+    private Label lblListenPort;
+    private NumericUpDown numListenPort;
     private PictureBox picBrand;
     private PictureBox picAppLogo;
 
@@ -432,6 +482,10 @@ partial class MainForm
     private TextBox txtReceivedSampleType;
     private Label lblReceivedSampleVolume;
     private TextBox txtReceivedSampleVolume;
+    private Label lblReceivedRackId;
+    private TextBox txtReceivedRackId;
+    private Label lblReceivedCarrierPosition;
+    private TextBox txtReceivedCarrierPosition;
     private DataGridView gridOrders;
     private DataGridViewTextBoxColumn colTestCode;
     private DataGridViewTextBoxColumn colTestName;

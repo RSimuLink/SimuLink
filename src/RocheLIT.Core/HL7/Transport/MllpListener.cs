@@ -21,7 +21,7 @@ namespace RocheLIT.HL7.Transport
         public MllpListener(int port, IPAddress? address = null, Encoding? encoding = null)
         {
             Port = port;
-            _address = address ?? IPAddress.Loopback;
+            _address = address ?? IPAddress.Any;
             _encoding = encoding ?? Encoding.UTF8;
         }
 

@@ -66,7 +66,9 @@ namespace RocheLIT.Services
                 _listener.Start();
 
                 SetState(ConnectionState.Connected);
-                _log.Success($"Connected to LIS server ({_settings.LisHost}:{_settings.LisPort}); listening on port {_listener.Port}.");
+                _log.Success(
+                    $"Connected to LIS server ({_settings.LisHost}:{_settings.LisPort}); " +
+                    $"listening for LIS orders on 0.0.0.0:{_listener.Port}.");
             }
             catch (Exception ex)
             {

@@ -23,6 +23,7 @@ public partial class MainForm : Form
         _settings = SettingsLoader.Load();
         _log.EntryAdded += (_, entry) => RunOnUi(() => AppendLog(entry));
 
+        LoadConnectionUiData();
         LoadUiData();
     }
 
@@ -94,6 +95,9 @@ public partial class MainForm : Form
 
     private async void btnConnect_Click(object? sender, EventArgs e)
     {
+        ApplyConnectionUiData();
+        SettingsLoader.SaveConnection(_settings.Connection);
+
         _connection = new LisConnectionService(_settings.Connection, _log);
         _connection.OrderReceived += (_, order) => RunOnUi(() => ShowOrder(order));
         _connection.StateChanged += (_, state) => RunOnUi(() => ApplyConnectionState(state));
@@ -127,6 +131,7 @@ public partial class MainForm : Form
         btnConnect.Enabled = state == ConnectionState.Disconnected;
         btnDisconnect.Enabled = connected;
         btnSendResult.Enabled = connected;
+        numListenPort.Enabled = !connected;
     }
 
     private void btnSettings_Click(object? sender, EventArgs e)
@@ -145,9 +150,24 @@ public partial class MainForm : Form
 
         if (result == DialogResult.OK)
         {
+            LoadConnectionUiData();
             _log.Info("Settings updated.");
         }
     }
+
+    private void LoadConnectionUiData() =>
+        numListenPort.Value = ClampPort(_settings.Connection.ListenPort);
+
+    private void ApplyConnectionUiData() =>
+        _settings.Connection.ListenPort = (int)numListenPort.Value;
+
+    private void numListenPort_ValueChanged(object? sender, EventArgs e)
+    {
+        ApplyConnectionUiData();
+        SettingsLoader.SaveConnection(_settings.Connection);
+    }
+
+    private static decimal ClampPort(int port) => Math.Min(65535, Math.Max(1, port));
 
     // --- Sending results ----------------------------------------------------
 
@@ -251,6 +271,8 @@ public partial class MainForm : Form
         txtReceivedTestType.Text = order.TestType;
         txtReceivedSampleType.Text = order.SampleType;
         txtReceivedSampleVolume.Text = order.SampleVolume;
+        txtReceivedRackId.Text = order.CarrierId;
+        txtReceivedCarrierPosition.Text = order.CarrierPosition;
 
         gridOrders.Rows.Clear();
         foreach (var test in order.Tests)

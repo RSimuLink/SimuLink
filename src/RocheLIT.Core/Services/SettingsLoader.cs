@@ -25,6 +25,11 @@ namespace RocheLIT.Services
         public static LitSettings Load()
         {
             var settings = BuildSeed();
+            var savedConnection = ConnectionSettingsPersistence.Load();
+            if (savedConnection is not null)
+            {
+                settings.Connection = savedConnection;
+            }
 
             // Default catalog: parse the bundled HIM. A missing/corrupt PDF must
             // not block startup, so failures fall back to an empty catalog.
@@ -44,6 +49,9 @@ namespace RocheLIT.Services
 
             return settings;
         }
+
+        public static void SaveConnection(ConnectionSettings connection) =>
+            ConnectionSettingsPersistence.Save(connection);
 
         /// <summary>
         /// Parses the bundled manual, or returns null when it cannot be located

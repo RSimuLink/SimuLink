@@ -1,5 +1,6 @@
 using RocheLIT.Him;
 using RocheLIT.Models;
+using RocheLIT.Services;
 
 namespace RocheLIT;
 
@@ -81,7 +82,7 @@ public sealed class SettingsForm : Form
 
         AddRow(layout, "LIS Host:", _txtHost);
         AddRow(layout, "LIS Port:", _numLisPort);
-        AddRow(layout, "Listener Port:", _numListenPort);
+        AddRow(layout, "LIT Listen Port:", _numListenPort);
         AddRow(layout, "Sending Application (MSH-3):", _txtSendingApp);
         AddRow(layout, "Sending Facility (MSH-4):", _txtSendingFacility);
         AddRow(layout, "Receiving Application (MSH-5):", _txtReceivingApp);
@@ -281,6 +282,8 @@ public sealed class SettingsForm : Form
         _connection.ReceivingApplication = _txtReceivingApp.Text.Trim();
         _connection.ReceivingFacility = _txtReceivingFacility.Text.Trim();
         _connection.Hl7Version = _txtVersion.Text.Trim();
+
+        SettingsLoader.SaveConnection(_connection);
     }
 
     private static decimal Clamp(int port) => Math.Min(65535, Math.Max(1, port));
