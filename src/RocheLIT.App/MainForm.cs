@@ -229,6 +229,8 @@ public partial class MainForm : Form
             SampleVolume = cmbSampleVolume.SelectedItem?.ToString() ?? string.Empty,
             RackId = txtRackId.Text.Trim(),
             CarrierPosition = txtCarrierPosition.Text.Trim(),
+            IncludeInventory = chkInventory.Checked,
+            IncludeCtValues = chkCtValues.Checked,
             ResultValue = value,
             ResultStatus = (ResultStatus)(cmbResultStatus.SelectedItem ?? ResultStatus.Final),
             ResultFlag = ResultFlag.Normal,

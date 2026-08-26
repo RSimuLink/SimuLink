@@ -29,6 +29,12 @@ namespace RocheLIT.Models.Workflows
         /// <summary>Position in carrier mapped to SAC-11. Defaults to 0 in generated examples when blank.</summary>
         public string CarrierPosition { get; set; } = string.Empty;
 
+        /// <summary>When true, generated LAB-29 examples include the seven INV segments.</summary>
+        public bool IncludeInventory { get; set; }
+
+        /// <summary>When true, generated LAB-29 examples include supplemental CT values.</summary>
+        public bool IncludeCtValues { get; set; }
+
         /// <summary>The result value (OBX-5).</summary>
         public string ResultValue { get; set; } = string.Empty;
 

@@ -142,6 +142,8 @@ public class ExampleGeneratorTests
         Assert.Contains(segs, s => s.StartsWith("TCD") && s.Contains("500^uL&&UCUM"));
         // Patient role on the standard result.
         Assert.Contains(segs, s => s.StartsWith("SPM") && s.Contains("P^^HL70369"));
+        Assert.DoesNotContain(segs, s => s.StartsWith("INV"));
+        Assert.DoesNotContain(segs, s => s.StartsWith("OBX") && s.Contains("S_OTHER"));
     }
 
     [Fact]
@@ -168,6 +170,60 @@ public class ExampleGeneratorTests
         var sac = msg.RawMessage.Split('\r').First(s => s.StartsWith("SAC"));
 
         Assert.Equal("SAC|||$0E0EYXDR|||||||RACK12|7", sac);
+    }
+
+    [Fact]
+    public void TestResult_IncludesInventorySegmentsWhenEnabled()
+    {
+        var input = Input();
+        input.IncludeInventory = true;
+
+        var gen = new ExampleGenerator(Settings());
+        var msg = Assert.Single(
+            gen.Generate(input, new[] { ExampleWorkflow.Lab29TestResult }, When));
+        var inv = msg.RawMessage.Split('\r').Where(s => s.StartsWith("INV")).ToArray();
+
+        Assert.Equal(7, inv.Length);
+        Assert.Equal(
+            "INV|Wash reagent^^99ROC|OK^^HL70383|LI^^HL70384|||||||||20260228225959+0100||||M03540",
+            inv[0]);
+        Assert.Equal(
+            "INV|Processing plate^^99ROC|OK^^HL70383|SC^^HL70384|||||||||20260331215959+0200||||073",
+            inv[^1]);
+    }
+
+    [Fact]
+    public void TestResult_IncludesCtValuesObxWhenEnabled()
+    {
+        var input = Input();
+        input.IncludeCtValues = true;
+
+        var gen = new ExampleGenerator(Settings());
+        var msg = Assert.Single(
+            gen.Generate(input, new[] { ExampleWorkflow.Lab29TestResult }, When));
+        var supplemental = Assert.Single(msg.RawMessage.Split('\r'),
+            s => s.StartsWith("OBX") && s.Contains("S_OTHER"));
+
+        Assert.StartsWith(
+            "OBX|2|NA|HIV^HIV^99ROC^S_OTHER^Other Supplemental^IHELAW|1|37.04^36.32",
+            supplemental);
+    }
+
+    [Fact]
+    public void TestResult_PutsInventoryBeforeCtValuesWhenBothEnabled()
+    {
+        var input = Input();
+        input.IncludeInventory = true;
+        input.IncludeCtValues = true;
+
+        var gen = new ExampleGenerator(Settings());
+        var msg = Assert.Single(
+            gen.Generate(input, new[] { ExampleWorkflow.Lab29TestResult }, When));
+        var names = msg.RawMessage.Split('\r').Select(s => s[..3]).ToArray();
+
+        Assert.Equal(
+            new[] { "MSH", "SPM", "SAC", "OBR", "ORC", "OBX", "TCD", "INV", "INV", "INV", "INV", "INV", "INV", "INV", "OBX" },
+            names);
     }
 
     [Fact]

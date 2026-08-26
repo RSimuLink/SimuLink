@@ -48,6 +48,8 @@ partial class MainForm
         txtCarrierPosition = new TextBox();
         lblResultStatus = new Label();
         cmbResultStatus = new ComboBox();
+        chkInventory = new CheckBox();
+        chkCtValues = new CheckBox();
         btnSendResult = new Button();
 
         // Right: Received order
@@ -184,9 +186,11 @@ partial class MainForm
         grpSend.Controls.Add(txtCarrierPosition);
         grpSend.Controls.Add(lblResultStatus);
         grpSend.Controls.Add(cmbResultStatus);
+        grpSend.Controls.Add(chkInventory);
+        grpSend.Controls.Add(chkCtValues);
         grpSend.Controls.Add(btnSendResult);
         grpSend.Location = new Point(12, 92);
-        grpSend.Size = new Size(480, 360);
+        grpSend.Size = new Size(480, 420);
         grpSend.Name = "grpSend";
         grpSend.Text = "Send Test Results to LIS";
 
@@ -255,11 +259,21 @@ partial class MainForm
         cmbResultStatus.DropDownStyle = ComboBoxStyle.DropDownList;
         cmbResultStatus.Name = "cmbResultStatus";
 
+        chkInventory.AutoSize = true;
+        chkInventory.Location = new Point(150, 320);
+        chkInventory.Name = "chkInventory";
+        chkInventory.Text = "Inventory";
+
+        chkCtValues.AutoSize = true;
+        chkCtValues.Location = new Point(270, 320);
+        chkCtValues.Name = "chkCtValues";
+        chkCtValues.Text = "ct values";
+
         btnSendResult.BackColor = Color.FromArgb(0, 102, 204);
         btnSendResult.ForeColor = Color.White;
         btnSendResult.FlatStyle = FlatStyle.Flat;
-        btnSendResult.Location = new Point(150, 318);
-        btnSendResult.Size = new Size(300, 32);
+        btnSendResult.Location = new Point(150, 360);
+        btnSendResult.Size = new Size(300, 40);
         btnSendResult.Name = "btnSendResult";
         btnSendResult.Text = "Send Results to LIS";
         btnSendResult.UseVisualStyleBackColor = false;
@@ -280,7 +294,7 @@ partial class MainForm
         grpReceived.Controls.Add(txtReceivedSampleVolume);
         grpReceived.Controls.Add(gridOrders);
         grpReceived.Location = new Point(504, 92);
-        grpReceived.Size = new Size(560, 360);
+        grpReceived.Size = new Size(560, 420);
         grpReceived.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
         grpReceived.Name = "grpReceived";
         grpReceived.Text = "Received LIS Order Details";
@@ -327,7 +341,7 @@ partial class MainForm
 
         gridOrders.Columns.AddRange(new DataGridViewColumn[] { colTestCode, colTestName, colPriority });
         gridOrders.Location = new Point(16, 216);
-        gridOrders.Size = new Size(524, 128);
+        gridOrders.Size = new Size(524, 188);
         gridOrders.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
         gridOrders.AllowUserToAddRows = false;
         gridOrders.ReadOnly = true;
@@ -345,8 +359,8 @@ partial class MainForm
         // grpLog
         //
         grpLog.Controls.Add(lstLog);
-        grpLog.Location = new Point(12, 464);
-        grpLog.Size = new Size(1052, 180);
+        grpLog.Location = new Point(12, 524);
+        grpLog.Size = new Size(1052, 120);
         grpLog.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
         grpLog.Name = "grpLog";
         grpLog.Text = "Activity Log";
@@ -417,6 +431,8 @@ partial class MainForm
     private TextBox txtCarrierPosition;
     private Label lblResultStatus;
     private ComboBox cmbResultStatus;
+    private CheckBox chkInventory;
+    private CheckBox chkCtValues;
     private Button btnSendResult;
 
     private GroupBox grpReceived;
