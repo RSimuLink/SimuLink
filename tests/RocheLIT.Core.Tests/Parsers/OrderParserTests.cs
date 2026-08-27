@@ -16,11 +16,10 @@ public class OrderParserTests
         "OBR|2|789456123||HCV^Hepatitis C^L|||||||||||||||||||||||S";
 
     [Fact]
-    public void Parse_MapsOrderNumberAndSampleId()
+    public void Parse_MapsSampleIdAndMessageType()
     {
         var order = OrderParser.Parse(Order);
 
-        Assert.Equal("123987654", order.OrderNumber);
         Assert.Equal("789456123", order.SampleId);
         Assert.Equal("OML^O33", order.MessageType);
     }

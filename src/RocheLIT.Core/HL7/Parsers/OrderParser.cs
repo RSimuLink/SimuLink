@@ -23,12 +23,7 @@ namespace RocheLIT.HL7.Parsers
                 MessageType = message.MessageType,
             };
 
-            // Order number: prefer ORC-2 (placer), fall back to ORC-3 (filler).
             var orc = message.Segment("ORC");
-            if (orc is not null)
-            {
-                order.OrderNumber = Coalesce(orc.Field(2), orc.Field(3));
-            }
 
             // Sample id: prefer SPM-2, fall back to first OBR-3.
             var spm = message.Segment("SPM");

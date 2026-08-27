@@ -53,8 +53,6 @@ partial class MainForm
 
         // Right: Received order
         grpReceived = new GroupBox();
-        lblOrderNumber = new Label();
-        txtOrderNumber = new TextBox();
         lblRecvSampleId = new Label();
         txtRecvSampleId = new TextBox();
         lblReceivedTestType = new Label();
@@ -281,8 +279,6 @@ partial class MainForm
         //
         // grpReceived
         //
-        grpReceived.Controls.Add(lblOrderNumber);
-        grpReceived.Controls.Add(txtOrderNumber);
         grpReceived.Controls.Add(lblRecvSampleId);
         grpReceived.Controls.Add(txtRecvSampleId);
         grpReceived.Controls.Add(lblReceivedTestType);
@@ -302,65 +298,57 @@ partial class MainForm
         grpReceived.Name = "grpReceived";
         grpReceived.Text = "Received LIS Order Details";
 
-        lblOrderNumber.AutoSize = true;
-        lblOrderNumber.Location = new Point(16, 36);
-        lblOrderNumber.Text = "Order Number:";
-        txtOrderNumber.Location = new Point(150, 33);
-        txtOrderNumber.Size = new Size(220, 27);
-        txtOrderNumber.ReadOnly = true;
-        txtOrderNumber.Name = "txtOrderNumber";
-
         lblRecvSampleId.AutoSize = true;
-        lblRecvSampleId.Location = new Point(16, 72);
+        lblRecvSampleId.Location = new Point(16, 36);
         lblRecvSampleId.Text = "Sample ID:";
-        txtRecvSampleId.Location = new Point(150, 69);
+        txtRecvSampleId.Location = new Point(150, 33);
         txtRecvSampleId.Size = new Size(220, 27);
         txtRecvSampleId.ReadOnly = true;
         txtRecvSampleId.Name = "txtRecvSampleId";
 
         lblReceivedTestType.AutoSize = true;
-        lblReceivedTestType.Location = new Point(16, 108);
+        lblReceivedTestType.Location = new Point(16, 72);
         lblReceivedTestType.Text = "Test Type:";
-        txtReceivedTestType.Location = new Point(150, 105);
+        txtReceivedTestType.Location = new Point(150, 69);
         txtReceivedTestType.Size = new Size(390, 27);
         txtReceivedTestType.ReadOnly = true;
         txtReceivedTestType.Name = "txtReceivedTestType";
 
         lblReceivedSampleType.AutoSize = true;
-        lblReceivedSampleType.Location = new Point(16, 144);
+        lblReceivedSampleType.Location = new Point(16, 108);
         lblReceivedSampleType.Text = "Sample Type:";
-        txtReceivedSampleType.Location = new Point(150, 141);
+        txtReceivedSampleType.Location = new Point(150, 105);
         txtReceivedSampleType.Size = new Size(220, 27);
         txtReceivedSampleType.ReadOnly = true;
         txtReceivedSampleType.Name = "txtReceivedSampleType";
 
         lblReceivedSampleVolume.AutoSize = true;
-        lblReceivedSampleVolume.Location = new Point(16, 180);
+        lblReceivedSampleVolume.Location = new Point(16, 144);
         lblReceivedSampleVolume.Text = "Sample Volume:";
-        txtReceivedSampleVolume.Location = new Point(150, 177);
+        txtReceivedSampleVolume.Location = new Point(150, 141);
         txtReceivedSampleVolume.Size = new Size(220, 27);
         txtReceivedSampleVolume.ReadOnly = true;
         txtReceivedSampleVolume.Name = "txtReceivedSampleVolume";
 
         lblReceivedRackId.AutoSize = true;
-        lblReceivedRackId.Location = new Point(16, 216);
+        lblReceivedRackId.Location = new Point(16, 180);
         lblReceivedRackId.Text = "Rack ID:";
-        txtReceivedRackId.Location = new Point(150, 213);
+        txtReceivedRackId.Location = new Point(150, 177);
         txtReceivedRackId.Size = new Size(220, 27);
         txtReceivedRackId.ReadOnly = true;
         txtReceivedRackId.Name = "txtReceivedRackId";
 
         lblReceivedCarrierPosition.AutoSize = true;
-        lblReceivedCarrierPosition.Location = new Point(16, 252);
+        lblReceivedCarrierPosition.Location = new Point(16, 216);
         lblReceivedCarrierPosition.Text = "Position in carrier:";
-        txtReceivedCarrierPosition.Location = new Point(150, 249);
+        txtReceivedCarrierPosition.Location = new Point(150, 213);
         txtReceivedCarrierPosition.Size = new Size(220, 27);
         txtReceivedCarrierPosition.ReadOnly = true;
         txtReceivedCarrierPosition.Name = "txtReceivedCarrierPosition";
 
         gridOrders.Columns.AddRange(new DataGridViewColumn[] { colTestCode, colTestName, colPriority });
-        gridOrders.Location = new Point(16, 288);
-        gridOrders.Size = new Size(524, 116);
+        gridOrders.Location = new Point(16, 252);
+        gridOrders.Size = new Size(524, 152);
         gridOrders.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
         gridOrders.AllowUserToAddRows = false;
         gridOrders.ReadOnly = true;
@@ -454,8 +442,6 @@ partial class MainForm
     private Button btnSendResult;
 
     private GroupBox grpReceived;
-    private Label lblOrderNumber;
-    private TextBox txtOrderNumber;
     private Label lblRecvSampleId;
     private TextBox txtRecvSampleId;
     private Label lblReceivedTestType;

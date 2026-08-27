@@ -6,9 +6,6 @@ namespace RocheLIT.Models.Orders
     /// </summary>
     public sealed class ReceivedOrder
     {
-        /// <summary>Placer/filler order number (ORC-2 / ORC-3).</summary>
-        public string OrderNumber { get; set; } = string.Empty;
-
         /// <summary>Specimen identifier (SPM-2 or OBR-3).</summary>
         public string SampleId { get; set; } = string.Empty;
 

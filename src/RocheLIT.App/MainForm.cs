@@ -273,7 +273,6 @@ public partial class MainForm : Form
     private void ShowOrder(ReceivedOrder order)
     {
         _lastReceivedOrder = order;
-        txtOrderNumber.Text = order.OrderNumber;
         txtRecvSampleId.Text = order.SampleId;
         txtReceivedTestType.Text = order.TestType;
         txtReceivedSampleType.Text = order.SampleType;
