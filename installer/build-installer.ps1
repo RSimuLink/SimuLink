@@ -12,7 +12,7 @@
     Inno Setup: https://jrsoftware.org/isdl.php
 
 .PARAMETER Version
-    Product/installer version (default 1.0.6).
+    Product/installer version (default 1.0.16).
 
 .PARAMETER Configuration
     Build configuration (default Release).
@@ -47,7 +47,7 @@
 #>
 [CmdletBinding()]
 param(
-    [string]$Version = "1.0.6",
+    [string]$Version = "1.0.16",
     [string]$Configuration = "Release",
     [string]$CertPath,
     [System.Security.SecureString]$CertPassword,
@@ -123,11 +123,14 @@ $issScript = Join-Path $PSScriptRoot "RocheLIT.iss"
 $publishDir = Join-Path $repoRoot "src\RocheLIT.App\bin\$Configuration\net10.0-windows\win-x64\publish"
 
 Write-Host "==> Publishing self-contained win-x64 build (v$Version)..." -ForegroundColor Cyan
+$assemblyVersion = "$Version.0"
 dotnet publish $appProject `
     -c $Configuration `
     -r win-x64 `
     --self-contained true `
     -p:Version=$Version `
+    -p:AssemblyVersion=$assemblyVersion `
+    -p:FileVersion=$assemblyVersion `
     -p:PublishSingleFile=false
 if ($LASTEXITCODE -ne 0) { throw "dotnet publish failed." }
 

@@ -21,6 +21,7 @@ partial class MainForm
         menuStrip = new MenuStrip();
         toolsMenu = new ToolStripMenuItem();
         exampleGeneratorMenuItem = new ToolStripMenuItem();
+        aboutMenuItem = new ToolStripMenuItem();
 
         // Toolbar
         pnlToolbar = new Panel();
@@ -85,7 +86,7 @@ partial class MainForm
         //
         // menuStrip
         //
-        menuStrip.Items.Add(toolsMenu);
+        menuStrip.Items.AddRange(new ToolStripItem[] { toolsMenu, aboutMenuItem });
         menuStrip.Location = new Point(0, 0);
         menuStrip.Name = "menuStrip";
         //
@@ -100,6 +101,12 @@ partial class MainForm
         exampleGeneratorMenuItem.Text = "&Example Generator...";
         exampleGeneratorMenuItem.Name = "exampleGeneratorMenuItem";
         exampleGeneratorMenuItem.Click += exampleGeneratorMenuItem_Click;
+        //
+        // aboutMenuItem
+        //
+        aboutMenuItem.Text = "&About";
+        aboutMenuItem.Name = "aboutMenuItem";
+        aboutMenuItem.Click += aboutMenuItem_Click;
 
         //
         // pnlToolbar
@@ -418,6 +425,7 @@ partial class MainForm
     private MenuStrip menuStrip;
     private ToolStripMenuItem toolsMenu;
     private ToolStripMenuItem exampleGeneratorMenuItem;
+    private ToolStripMenuItem aboutMenuItem;
 
     private Panel pnlToolbar;
     private Button btnConnect;

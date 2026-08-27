@@ -1,3 +1,4 @@
+using System.Reflection;
 using RocheLIT.HL7.Law;
 using RocheLIT.Logging;
 using RocheLIT.Models;
@@ -213,6 +214,30 @@ public partial class MainForm : Form
         var input = BuildExampleInput();
         using var dialog = new ExampleGeneratorForm(input, _settings.Connection);
         dialog.ShowDialog(this);
+    }
+
+    private void aboutMenuItem_Click(object? sender, EventArgs e)
+    {
+        MessageBox.Show(this,
+            $"Roche Laboratory Interfacing Tool ver. {AppVersion()}",
+            "About Roche LIT",
+            MessageBoxButtons.OK,
+            MessageBoxIcon.Information);
+    }
+
+    private static string AppVersion()
+    {
+        var version = typeof(MainForm).Assembly
+            .GetCustomAttribute<AssemblyInformationalVersionAttribute>()?
+            .InformationalVersion;
+
+        if (string.IsNullOrWhiteSpace(version))
+        {
+            version = Application.ProductVersion;
+        }
+
+        var metadataIndex = version.IndexOf('+');
+        return metadataIndex >= 0 ? version[..metadataIndex] : version;
     }
 
     /// <summary>
