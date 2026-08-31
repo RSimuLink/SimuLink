@@ -49,7 +49,7 @@ namespace RocheLIT.Him
             return assay.SampleTypes
                 .Select(s => new SampleType
                 {
-                    DisplayName = s.Name,
+                    DisplayName = DisplayNameFor(s),
                     // SPM-4 identifier component (e.g. "PLAS" from "PLAS^plasma^HL70487").
                     Hl7Code = s.SpecimenType.Split('^')[0],
                     // Full SPM-4 coded element (e.g. "PLAS^plasma^HL70487").
@@ -140,10 +140,58 @@ namespace RocheLIT.Him
                 .ToList(),
         };
 
-        private static IEnumerable<string> VolumeOptions(AssaySampleType sampleType) =>
-            sampleType.VolumeOptionsMicroliters.Count > 0
+        private static IEnumerable<string> VolumeOptions(AssaySampleType sampleType)
+        {
+            var values = new List<string>();
+            values.AddRange(LeadingVolumesFromName(sampleType.Name));
+
+            IEnumerable<string> parsedValues = sampleType.VolumeOptionsMicroliters.Count > 0
                 ? sampleType.VolumeOptionsMicroliters
                 : new[] { sampleType.VolumeMicroliters };
+
+            foreach (var value in parsedValues)
+            {
+                if (value.Length > 0 && !values.Contains(value, StringComparer.Ordinal))
+                {
+                    values.Add(value);
+                }
+            }
+
+            return values;
+        }
+
+        private static string DisplayNameFor(AssaySampleType sampleType)
+        {
+            var name = sampleType.Name.Trim();
+            while (true)
+            {
+                var match = System.Text.RegularExpressions.Regex.Match(name, @"^(\d+)\s+");
+                if (!match.Success)
+                {
+                    break;
+                }
+
+                name = name[match.Length..].TrimStart();
+            }
+
+            return name;
+        }
+
+        private static IEnumerable<string> LeadingVolumesFromName(string name)
+        {
+            var cleaned = name.Trim();
+            while (true)
+            {
+                var match = System.Text.RegularExpressions.Regex.Match(cleaned, @"^(\d+)\s+");
+                if (!match.Success)
+                {
+                    yield break;
+                }
+
+                yield return match.Groups[1].Value.Trim();
+                cleaned = cleaned[match.Length..].TrimStart();
+            }
+        }
 
         private static void MergeVolumes(List<SampleVolume> target, IEnumerable<SampleVolume> source)
         {

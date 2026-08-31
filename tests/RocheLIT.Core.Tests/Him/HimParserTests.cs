@@ -118,6 +118,13 @@ public class HimParserTests
         Assert.Equal("Whole Blood", malariaSample.Name);
         Assert.Equal("BLD^Whole Blood^HL70487", malariaSample.SpecimenType);
 
+        var hiv1 = Assay("HIV-1");
+        var hiv1Sample = Assert.Single(hiv1.SampleTypes);
+        Assert.Equal("PLASMA", hiv1Sample.Name);
+        Assert.Equal("PLAS^plasma^HL70487", hiv1Sample.SpecimenType);
+        Assert.Equal("200", hiv1Sample.VolumeMicroliters);
+        Assert.Equal(new[] { "200", "500" }, hiv1Sample.VolumeOptionsMicroliters);
+
         var mpxe = Assay("MPX-E");
         Assert.Equal(
             new[] { "PLASMA", "SERUM", "CADAVERIC PLASMA", "CADAVERIC SERUM" },

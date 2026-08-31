@@ -279,13 +279,14 @@ namespace RocheLIT.Him
             var lastEnd = 0;
             foreach (Match m in SampleTypeRowRegex().Matches(region))
             {
-                var name = region[lastEnd..m.Index].Trim();
+                var sampleName = ParseSampleName(region[lastEnd..m.Index]);
+                var volumeOptions = ParseVolumeOptions(region, m, sampleName.LeadingVolumes);
                 result.Add(new AssaySampleType
                 {
-                    Name = CleanName(name),
+                    Name = sampleName.Name,
                     SpecimenType = m.Groups[1].Value.Trim(),
-                    VolumeMicroliters = m.Groups[2].Value.Trim(),
-                    VolumeOptionsMicroliters = ParseVolumeOptions(region, m),
+                    VolumeMicroliters = volumeOptions.FirstOrDefault() ?? m.Groups[2].Value.Trim(),
+                    VolumeOptionsMicroliters = volumeOptions,
                 });
                 lastEnd = m.Index + m.Length;
             }
@@ -459,9 +460,43 @@ namespace RocheLIT.Him
             return CollapseSpaces(cleaned);
         }
 
-        private static List<string> ParseVolumeOptions(string region, Match rowMatch)
+        private static SampleNameParts ParseSampleName(string raw)
         {
-            var values = new List<string> { rowMatch.Groups[2].Value.Trim() };
+            var cleaned = raw.Trim();
+            var leadingVolumes = new List<string>();
+
+            while (true)
+            {
+                var match = Regex.Match(cleaned, @"^(\d+)\s+");
+                if (!match.Success)
+                {
+                    break;
+                }
+
+                var volume = match.Groups[1].Value.Trim();
+                if (!leadingVolumes.Contains(volume, StringComparer.Ordinal))
+                {
+                    leadingVolumes.Add(volume);
+                }
+
+                cleaned = cleaned[match.Length..].TrimStart();
+            }
+
+            return new SampleNameParts(CleanName(cleaned), leadingVolumes);
+        }
+
+        private static List<string> ParseVolumeOptions(
+            string region,
+            Match rowMatch,
+            IReadOnlyList<string>? leadingVolumes = null)
+        {
+            var values = new List<string>();
+            if (leadingVolumes is not null)
+            {
+                values.AddRange(leadingVolumes);
+            }
+
+            AddDistinct(values, rowMatch.Groups[2].Value.Trim());
             var index = rowMatch.Index + rowMatch.Length;
             while (index < region.Length)
             {
@@ -472,10 +507,7 @@ namespace RocheLIT.Him
                 }
 
                 var value = alt.Groups[1].Value.Trim();
-                if (!values.Contains(value, StringComparer.Ordinal))
-                {
-                    values.Add(value);
-                }
+                AddDistinct(values, value);
 
                 index += alt.Length;
             }
@@ -483,7 +515,17 @@ namespace RocheLIT.Him
             return values;
         }
 
+        private static void AddDistinct(List<string> values, string value)
+        {
+            if (value.Length > 0 && !values.Contains(value, StringComparer.Ordinal))
+            {
+                values.Add(value);
+            }
+        }
+
         private static string CollapseSpaces(string value) =>
             Regex.Replace(value, @"\s+", " ").Trim();
+
+        private sealed record SampleNameParts(string Name, List<string> LeadingVolumes);
     }
 }
