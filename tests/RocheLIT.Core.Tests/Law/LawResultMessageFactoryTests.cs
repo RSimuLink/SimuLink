@@ -192,4 +192,45 @@ public class LawResultMessageFactoryTests
         Assert.NotNull(parsed.Segment("SPM"));
         Assert.NotNull(parsed.Segment("SAC"));
     }
+
+    [Fact]
+    public void Create_IncludesInventoryAndCtValuesInBuildableOulR22WhenRequested()
+    {
+        var test = WnvTest();
+        var msg = LawResultMessageFactory.Create(
+            "$ABC123456",
+            new SampleType
+            {
+                DisplayName = "Cadaveric Plasma",
+                Hl7Code = "CP",
+                SpecimenCode = "CP^cadavericPlasma^99ROC",
+            },
+            test,
+            test.Targets[0],
+            "RR",
+            ResultFlag.Normal,
+            Settings,
+            When,
+            "150 uL",
+            rackId: "1897",
+            carrierPosition: "5",
+            includeInventory: true,
+            includeCtValues: true);
+
+        var segments = LawOulR22Builder.Build(msg).RawMessage.Split('\r');
+        var names = segments.Select(s => s[..3]).ToArray();
+
+        Assert.Equal(
+            new[] { "MSH", "SPM", "SAC", "OBR", "ORC", "OBX", "TCD", "INV", "INV", "INV", "INV", "INV", "INV", "INV", "OBX" },
+            names);
+        Assert.Equal(7, segments.Count(s => s.StartsWith("INV")));
+        Assert.Contains(
+            "INV|Wash reagent^^99ROC|OK^^HL70383|LI^^HL70384|||||||||20260228225959+0100||||M03540",
+            segments);
+
+        var ctValues = Assert.Single(segments, s => s.StartsWith("OBX") && s.Contains("S_OTHER"));
+        Assert.StartsWith(
+            "OBX|2|NA|WNV^WNV^99ROC^S_OTHER^Other Supplemental^IHELAW|1|37.04^36.32",
+            ctValues);
+    }
 }

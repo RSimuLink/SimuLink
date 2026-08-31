@@ -214,7 +214,9 @@ namespace RocheLIT.Services
                 timestamp: when,
                 sampleVolume: input.SampleVolume,
                 rackId: ExampleRackId(input),
-                carrierPosition: ExampleCarrierPosition(input));
+                carrierPosition: ExampleCarrierPosition(input),
+                includeInventory: input.IncludeInventory,
+                includeCtValues: input.IncludeCtValues);
 
             message.Specimen.Role = role;
             foreach (var test in message.Tests)
@@ -225,15 +227,6 @@ namespace RocheLIT.Services
                         LawResultMessageFactory.FormatConsumptionVolume(input.SampleVolume);
                 }
 
-                if (input.IncludeInventory)
-                {
-                    test.Reagents.AddRange(DefaultInventory());
-                }
-
-                if (input.IncludeCtValues)
-                {
-                    test.Observations.Add(BuildCtValuesObservation(test, when));
-                }
             }
 
             return message;
@@ -247,53 +240,6 @@ namespace RocheLIT.Services
 
         private static string ExampleCarrierPosition(ExampleGeneratorInput input) =>
             string.IsNullOrWhiteSpace(input.CarrierPosition) ? "0" : input.CarrierPosition.Trim();
-
-        private static IEnumerable<ReagentInventory> DefaultInventory()
-        {
-            yield return Inventory("Wash reagent", "LI", "20260228225959+0100", "M03540");
-            yield return Inventory("Lysis reagent", "LI", "20260430215959+0200", "M05831");
-            yield return Inventory("MGP cassette", "SC", "20251130225959+0100", "K23431");
-            yield return Inventory("Reagent cassette", "MR", "20260131225959+0100", "M08263");
-            yield return Inventory("Diluent", "DI", "20260331215959+0200", "M05812");
-            yield return Inventory("Amplification plate", "SC", "20260531215959+0200", "040");
-            yield return Inventory("Processing plate", "SC", "20260331215959+0200", "073");
-        }
-
-        private static ReagentInventory Inventory(
-            string substance, string substanceType, string expiryDateTime, string lotNumber) => new()
-            {
-                SubstanceId = new CodedElement(substance, "", "99ROC"),
-                Status = new CodedElement("OK", "", "HL70383"),
-                SubstanceType = new CodedElement(substanceType, "", "HL70384"),
-                ExpiryDateTime = expiryDateTime,
-                LotNumber = lotNumber,
-            };
-
-        private static ChannelResult BuildCtValuesObservation(LawTestResult test, DateTimeOffset when)
-        {
-            var primary = test.Observations.FirstOrDefault();
-            return new ChannelResult
-            {
-                SetId = (test.Observations.Count + 1).ToString(CultureInfo.InvariantCulture),
-                ValueType = "NA",
-                ObservationId = new CodedElement(
-                    primary?.ObservationId.Identifier ?? "WNV",
-                    primary?.ObservationId.Text ?? "WNV",
-                    "99ROC^S_OTHER^Other Supplemental^IHELAW"),
-                SubId = primary?.SubId ?? "1",
-                Value = "37.04^36.32",
-                Interpretation = new CodedElement(
-                    primary?.Interpretation?.Identifier ?? "RR",
-                    "",
-                    primary?.Interpretation?.CodingSystem ?? "99ROC"),
-                Status = primary?.Status ?? "F",
-                ResponsibleObserver = primary?.ResponsibleObserver ?? "X800DMSYSTEM",
-                ObservationMethod = primary?.ObservationMethod ?? "c6800^Roche~c6800.504^Roche",
-                AnalysisDateTime = primary?.AnalysisDateTime ?? when.ToString("yyyyMMddHHmmss"),
-                EquipmentInstanceId = primary?.EquipmentInstanceId ?? string.Empty,
-                ObservationType = "RSLT",
-            };
-        }
 
     }
 }

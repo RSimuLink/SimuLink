@@ -27,7 +27,9 @@ namespace RocheLIT.HL7.Law
             DateTimeOffset? timestamp = null,
             string sampleVolume = "",
             string rackId = "",
-            string carrierPosition = "")
+            string carrierPosition = "",
+            bool includeInventory = false,
+            bool includeCtValues = false)
         {
             ArgumentNullException.ThrowIfNull(sampleType);
             ArgumentNullException.ThrowIfNull(test);
@@ -68,7 +70,7 @@ namespace RocheLIT.HL7.Law
                 setId++;
             }
 
-            return new LawResultMessage
+            var message = new LawResultMessage
             {
                 SendingApplication = settings.SendingApplication,
                 ReceivingApplication = settings.ReceivingApplication,
@@ -96,6 +98,21 @@ namespace RocheLIT.HL7.Law
                     },
                 },
             };
+
+            foreach (var testResult in message.Tests)
+            {
+                if (includeInventory)
+                {
+                    testResult.Reagents.AddRange(DefaultInventory());
+                }
+
+                if (includeCtValues)
+                {
+                    testResult.Observations.Add(BuildCtValuesObservation(testResult, when));
+                }
+            }
+
+            return message;
         }
 
         public static string FormatConsumptionVolume(string volume)
@@ -154,5 +171,53 @@ namespace RocheLIT.HL7.Law
         }
 
         private sealed record ResolvedResult(string Value, CodedElement Interpretation);
+
+        private static IEnumerable<ReagentInventory> DefaultInventory()
+        {
+            yield return Inventory("Wash reagent", "LI", "20260228225959+0100", "M03540");
+            yield return Inventory("Lysis reagent", "LI", "20260430215959+0200", "M05831");
+            yield return Inventory("MGP cassette", "SC", "20251130225959+0100", "K23431");
+            yield return Inventory("Reagent cassette", "MR", "20260131225959+0100", "M08263");
+            yield return Inventory("Diluent", "DI", "20260331215959+0200", "M05812");
+            yield return Inventory("Amplification plate", "SC", "20260531215959+0200", "040");
+            yield return Inventory("Processing plate", "SC", "20260331215959+0200", "073");
+        }
+
+        private static ReagentInventory Inventory(
+            string substance, string substanceType, string expiryDateTime, string lotNumber) => new()
+            {
+                SubstanceId = new CodedElement(substance, "", "99ROC"),
+                Status = new CodedElement("OK", "", "HL70383"),
+                SubstanceType = new CodedElement(substanceType, "", "HL70384"),
+                ExpiryDateTime = expiryDateTime,
+                LotNumber = lotNumber,
+            };
+
+        private static ChannelResult BuildCtValuesObservation(LawTestResult test, DateTimeOffset when)
+        {
+            var primary = test.Observations.FirstOrDefault();
+            return new ChannelResult
+            {
+                SetId = (test.Observations.Count + 1).ToString(
+                    System.Globalization.CultureInfo.InvariantCulture),
+                ValueType = "NA",
+                ObservationId = new CodedElement(
+                    primary?.ObservationId.Identifier ?? "WNV",
+                    primary?.ObservationId.Text ?? "WNV",
+                    "99ROC^S_OTHER^Other Supplemental^IHELAW"),
+                SubId = primary?.SubId ?? "1",
+                Value = "37.04^36.32",
+                Interpretation = new CodedElement(
+                    primary?.Interpretation?.Identifier ?? "RR",
+                    "",
+                    primary?.Interpretation?.CodingSystem ?? "99ROC"),
+                Status = primary?.Status ?? "F",
+                ResponsibleObserver = primary?.ResponsibleObserver ?? "X800DMSYSTEM",
+                ObservationMethod = primary?.ObservationMethod ?? "c6800^Roche~c6800.504^Roche",
+                AnalysisDateTime = primary?.AnalysisDateTime ?? when.ToString("yyyyMMddHHmmss"),
+                EquipmentInstanceId = primary?.EquipmentInstanceId ?? string.Empty,
+                ObservationType = "RSLT",
+            };
+        }
     }
 }

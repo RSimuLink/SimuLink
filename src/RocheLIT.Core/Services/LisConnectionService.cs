@@ -1,5 +1,6 @@
 using RocheLIT.HL7.Parsers;
 using RocheLIT.HL7.Transport;
+using RocheLIT.HL7.Validation;
 using RocheLIT.Logging;
 using RocheLIT.Models;
 using RocheLIT.Models.Orders;
@@ -103,6 +104,18 @@ namespace RocheLIT.Services
         {
             try
             {
+                var validationIssues = Hl7OrderValidator.Validate(e.Parsed);
+                if (validationIssues.Count > 0)
+                {
+                    foreach (var issue in validationIssues)
+                    {
+                        _log.Error($"Inbound HL7 validation error: {issue}");
+                    }
+
+                    e.Acknowledgement = BuildApplicationRejectAck(e.Parsed);
+                    return;
+                }
+
                 var order = OrderParser.ToOrder(e.Parsed);
 
                 var testSummary = order.Tests.Count > 0
@@ -116,6 +129,14 @@ namespace RocheLIT.Services
             {
                 _log.Error($"Failed to parse inbound order: {ex.Message}");
             }
+        }
+
+        private static string BuildApplicationRejectAck(ParsedHl7Message parsed)
+        {
+            var controlId = parsed.Segment("MSH")?.Field(10) ?? string.Empty;
+            return string.Join("\r",
+                $"MSH|^~\\&|LIT|Roche|LIS|Hospital|{DateTime.Now:yyyyMMddHHmmss}||ACK|{Guid.NewGuid()}|P|2.5.1",
+                $"MSA|AR|{controlId}");
         }
 
         private void SetState(ConnectionState state)

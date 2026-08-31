@@ -187,7 +187,9 @@ public partial class MainForm : Form
             _settings.Connection,
             sampleVolume: cmbSampleVolume.SelectedItem?.ToString() ?? string.Empty,
             rackId: txtRackId.Text,
-            carrierPosition: txtCarrierPosition.Text);
+            carrierPosition: txtCarrierPosition.Text,
+            includeInventory: chkInventory.Checked,
+            includeCtValues: chkCtValues.Checked);
         ApplyReceivedOrderContext(resultMessage, sampleId);
         var message = LawOulR22Builder.Build(resultMessage);
 
@@ -341,6 +343,12 @@ public partial class MainForm : Form
                 _ => Color.Black,
             },
         };
+
+        if (entry.Severity == LogSeverity.Error)
+        {
+            item.Font = new Font(lstLog.Font, FontStyle.Bold);
+        }
+
         lstLog.Items.Add(item);
         lstLog.Columns[0].Width = -2;
         item.EnsureVisible();

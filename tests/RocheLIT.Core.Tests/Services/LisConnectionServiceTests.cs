@@ -12,11 +12,12 @@ namespace RocheLIT.Core.Tests.Services;
 public class LisConnectionServiceTests
 {
     private const string Order =
-        "MSH|^~\\&|LIS|Hospital|LIT|Roche|20260624120000||OML^O33|CTRL-7|P|2.5.1\r" +
+        "MSH|^~\\&|LIS|Hospital|LIT|Roche|20260624120000||OML^O33^OML_O33|CTRL-7|P|2.5.1|||NE|AL||UNICODE UTF-8|||LAB-28^IHE\r" +
         "PID|1||789456123^^^LIS||Johnson^Emily||19850825|F\r" +
-        "ORC|NW|123987654|||||R\r" +
-        "SPM|1|789456123||PLAS\r" +
-        "OBR|1|789456123||HPV^HPV Typing^L\r" +
+        "SPM|1|789456123||PLAS^plasma^HL70487|||||||P^^HL70369\r" +
+        "SAC|||789456123|||||||1897|5\r" +
+        "ORC|NW||||||||20260624120000\r" +
+        "OBR||789456123||HPV^HPV Typing^L\r" +
         "TCD|HPV^HPV Typing^L||||||||500^uL&&UCUM";
 
     /// <summary>A stand-in LIS that accepts one connection and ACKs each frame.</summary>
@@ -135,10 +136,43 @@ public class LisConnectionServiceTests
         Assert.NotNull(received);
         Assert.Equal("789456123", received!.SampleId);
         Assert.Equal("HPV Typing", received.TestType);
-        Assert.Equal("PLAS", received.SampleType);
+        Assert.Equal("PLAS^plasma^HL70487", received.SampleType);
         Assert.Equal("500^uL&&UCUM", received.SampleVolume);
+        Assert.Equal("1897", received.CarrierId);
+        Assert.Equal("5", received.CarrierPosition);
         Assert.Single(received.Tests);
         Assert.Contains(log.Entries, e => e.Message.Contains("Order received"));
+
+        await service.DisconnectAsync();
+        fakeLis.Stop();
+    }
+
+    [Fact]
+    public async Task IncomingInvalidOrder_LogsValidationError_AndDoesNotRaiseOrderReceived()
+    {
+        var invalidOrder = Order.Replace(
+            "SAC|||789456123|||||||1897|5",
+            "SAC|||789456123|||||1897|5",
+            StringComparison.Ordinal);
+        var (fakeLis, port) = StartFakeLis(invalidOrder);
+        var log = new ActivityLog();
+        var settings = new ConnectionSettings { LisHost = "127.0.0.1", LisPort = port };
+        using var service = new LisConnectionService(settings, log);
+
+        ReceivedOrder? received = null;
+        service.OrderReceived += (_, o) => received = o;
+
+        await service.ConnectAsync();
+
+        for (var i = 0; i < 50 && !log.Entries.Any(e => e.Severity == LogSeverity.Error); i++)
+        {
+            await Task.Delay(20);
+        }
+
+        Assert.Null(received);
+        Assert.Contains(log.Entries, e =>
+            e.Severity == LogSeverity.Error &&
+            e.Message.Contains("Inbound HL7 validation error: SAC[1]-10"));
 
         await service.DisconnectAsync();
         fakeLis.Stop();
