@@ -312,10 +312,16 @@ public partial class MainForm : Form
 
         var test = cmbTestType.SelectedItem as TestType;
         var sampleType = cmbSampleType.SelectedItem as SampleType;
-        if (!ResultEntryPresenter.CanSend(test, sampleType))
+        if (test is null || (!chkControlResult.Checked && !ResultEntryPresenter.CanSend(test, sampleType)))
         {
             MessageBox.Show("Please complete the result fields.", "Missing data",
                 MessageBoxButtons.OK, MessageBoxIcon.Information);
+            return;
+        }
+
+        if (chkControlResult.Checked)
+        {
+            await SendControlResultsAsync(test);
             return;
         }
 
@@ -360,6 +366,34 @@ public partial class MainForm : Form
         catch (Exception ex)
         {
             _log.Error($"Failed to send results: {ex.Message}");
+        }
+    }
+
+    private async Task SendControlResultsAsync(TestType test)
+    {
+        var controls = LawResultMessageFactory.ControlResultsFor(test);
+        var sent = new List<string>();
+
+        try
+        {
+            foreach (var control in controls)
+            {
+                var resultMessage = LawResultMessageFactory.CreateControl(
+                    test,
+                    control,
+                    _settings.Connection,
+                    includeInventory: true);
+                var message = LawOulR22Builder.Build(resultMessage);
+                await _connection!.SendResultAsync(message.RawMessage);
+                sent.Add($"{control.Name} ({resultMessage.Specimen.SampleId})");
+            }
+
+            _log.Success(
+                $"Control results sent to LIS: {test.Name}; {string.Join(", ", sent)}");
+        }
+        catch (Exception ex)
+        {
+            _log.Error($"Failed to send control results: {ex.Message}");
         }
     }
 

@@ -24,5 +24,11 @@ namespace RocheLIT.Models
         /// sample types apply.
         /// </summary>
         public List<SampleType> AllowedSampleTypes { get; set; } = new();
+
+        /// <summary>
+        /// Control result options listed for this assay in the host interface
+        /// manual. These become the control INV-1 values in QC OUL^R22 messages.
+        /// </summary>
+        public List<ControlResult> ControlResults { get; set; } = new();
     }
 }

@@ -15,10 +15,18 @@ namespace RocheLIT.HL7.Law
             .Set(11, s.Role.Length > 0 ? $"{s.Role}^^HL70369" : string.Empty)
             .Render();
 
-        public static string BuildSac(Specimen s) => new LawField("SAC")
-            .Set(3, s.SampleId)
-            .Set(10, s.CarrierId)
-            .Set(11, s.CarrierPosition)
-            .Render();
+        public static string BuildSac(Specimen s)
+        {
+            if (string.Equals(s.Role, "Q", StringComparison.OrdinalIgnoreCase))
+            {
+                return "SAC|";
+            }
+
+            return new LawField("SAC")
+                .Set(3, s.SampleId)
+                .Set(10, s.CarrierId)
+                .Set(11, s.CarrierPosition)
+                .Render();
+        }
     }
 }

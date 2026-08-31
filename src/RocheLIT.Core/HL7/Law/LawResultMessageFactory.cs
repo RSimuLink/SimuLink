@@ -118,6 +118,105 @@ namespace RocheLIT.HL7.Law
             return message;
         }
 
+        public static LawResultMessage CreateControl(
+            TestType test,
+            ControlResult control,
+            ConnectionSettings settings,
+            DateTimeOffset? timestamp = null,
+            string sampleId = "",
+            bool includeInventory = true)
+        {
+            ArgumentNullException.ThrowIfNull(test);
+            ArgumentNullException.ThrowIfNull(control);
+            ArgumentNullException.ThrowIfNull(settings);
+
+            var when = timestamp ?? DateTimeOffset.Now;
+            var controlSampleId = string.IsNullOrWhiteSpace(sampleId)
+                ? GenerateControlSampleId()
+                : sampleId.Trim();
+            var responsibleObserver = string.IsNullOrWhiteSpace(settings.SendingApplication)
+                ? string.Empty
+                : $"{settings.SendingApplication}SYSTEM";
+
+            var observations = new List<ChannelResult>();
+            var setId = 1;
+            var targets = test.Targets.Count > 0
+                ? test.Targets
+                : new List<Target> { new() };
+            foreach (var target in targets)
+            {
+                observations.Add(BuildControlObservation(
+                    target,
+                    control,
+                    setId.ToString(System.Globalization.CultureInfo.InvariantCulture),
+                    when,
+                    responsibleObserver));
+                setId++;
+            }
+
+            var testResult = new LawTestResult
+            {
+                SetId = "1",
+                TestCode = CodedElement.Parse(test.UniversalServiceIdentifier),
+                OrderControl = "SC",
+                OrderStatus = "CM",
+                EmitTcdWhenEmpty = true,
+                Observations = observations,
+            };
+
+            if (includeInventory)
+            {
+                testResult.Reagents.AddRange(DefaultInventory());
+            }
+
+            // The HIM requires the supplemental OBX to be sent for control
+            // results even when the primary result is invalid.
+            testResult.Observations.Add(BuildCtValuesObservation(testResult, when));
+
+            return new LawResultMessage
+            {
+                SendingApplication = settings.SendingApplication,
+                ReceivingApplication = settings.ReceivingApplication,
+                MessageDateTime = when.ToString("yyyyMMddHHmmsszzz").Replace(":", string.Empty),
+                MessageControlId = Guid.NewGuid().ToString(),
+                Specimen = new Specimen
+                {
+                    SampleId = controlSampleId,
+                    Namespace = "ROCHE",
+                    SpecimenType = new CodedElement(),
+                    Role = "Q",
+                },
+                ContainerInventories =
+                {
+                    new ReagentInventory
+                    {
+                        SubstanceId = new CodedElement(control.Name, "", "99ROC"),
+                        Status = new CodedElement("OK", "", "HL70383"),
+                        SubstanceType = new CodedElement("CO", "", "HL70384"),
+                        ExpiryDateTime = "20250930235959+0200",
+                        LotNumber = ControlLot(control),
+                    },
+                },
+                Tests = { testResult },
+            };
+        }
+
+        public static IReadOnlyList<ControlResult> ControlResultsFor(TestType test)
+        {
+            ArgumentNullException.ThrowIfNull(test);
+
+            if (test.ControlResults.Count > 0)
+            {
+                return test.ControlResults;
+            }
+
+            return new[]
+            {
+                new ControlResult { Name = $"{test.Name} (+) C", IsPositive = true },
+                new ControlResult { Name = "(-) C", IsPositive = false },
+            };
+        }
+
         public static string FormatConsumptionVolume(string volume)
         {
             if (string.IsNullOrWhiteSpace(volume))
@@ -202,6 +301,81 @@ namespace RocheLIT.HL7.Law
         }
 
         private sealed record ResolvedResult(string Value, CodedElement Interpretation);
+
+        private static string GenerateControlSampleId()
+        {
+            Span<byte> bytes = stackalloc byte[20];
+            System.Security.Cryptography.RandomNumberGenerator.Fill(bytes);
+
+            var chars = new char[21];
+            chars[0] = 'C';
+            for (var i = 0; i < bytes.Length; i++)
+            {
+                chars[i + 1] = (char)('0' + (bytes[i] % 10));
+            }
+
+            return new string(chars);
+        }
+
+        private static string ControlLot(ControlResult control)
+        {
+            if (!control.IsPositive)
+            {
+                return "K12238";
+            }
+
+            return control.Name.Contains("Malaria", StringComparison.OrdinalIgnoreCase)
+                ? "M06991"
+                : "K15555";
+        }
+
+        private static ChannelResult BuildControlObservation(
+            Target target,
+            ControlResult control,
+            string setId,
+            DateTimeOffset when,
+            string responsibleObserver)
+        {
+            var observation = CodedElement.Parse(target.ObservationIdentifier);
+            if (string.IsNullOrWhiteSpace(observation.Identifier))
+            {
+                observation = new CodedElement(target.Name, target.Name, "99ROC");
+            }
+
+            var numeric = ControlNumericValue(control.Name);
+            return new ChannelResult
+            {
+                SetId = setId,
+                ValueType = numeric.ValueType,
+                ObservationId = observation,
+                SubId = "1",
+                Value = numeric.Value,
+                Units = numeric.Units,
+                Interpretation = new CodedElement("VAL", "", "99ROC"),
+                Status = "F",
+                ResponsibleObserver = responsibleObserver,
+                ObservationMethod = "c6800^Roche~c6800.2567^Roche",
+                AnalysisDateTime = when.ToString("yyyyMMddHHmmss"),
+                EquipmentInstanceId = "6-2567-250313-0039",
+                ObservationType = "RSLT",
+            };
+        }
+
+        private static (string ValueType, string Value, CodedElement? Units) ControlNumericValue(
+            string controlName)
+        {
+            if (controlName.Contains(" H ", StringComparison.OrdinalIgnoreCase))
+            {
+                return ("NM", "281", new CodedElement("10*3.{copies}/mL", "", "UCUM"));
+            }
+
+            if (controlName.Contains(" L ", StringComparison.OrdinalIgnoreCase))
+            {
+                return ("NM", "630", new CodedElement("10*0.{copies}/mL", "", "UCUM"));
+            }
+
+            return ("ST", "Valid", null);
+        }
 
         private static IEnumerable<ReagentInventory> DefaultInventory()
         {

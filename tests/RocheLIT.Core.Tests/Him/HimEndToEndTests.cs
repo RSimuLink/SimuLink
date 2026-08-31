@@ -75,6 +75,8 @@ public class HimEndToEndTests
         var malariaSample = Assert.Single(malaria.AllowedSampleTypes);
         Assert.Equal("BLD", malariaSample.Hl7Code);
         Assert.Equal("500 uL", Assert.Single(malariaSample.AllowedVolumes).Volume);
+        Assert.Contains(malaria.ControlResults, c => c.Name == "Malaria (+) C");
+        Assert.Contains(malaria.ControlResults, c => c.Name == "(-) C");
 
         var hiv1 = Assert.Single(testTypes, t =>
             t.Name == "HIV-1" && t.UniversalServiceIdentifier == "70241-5^HIV^LN");
@@ -82,6 +84,9 @@ public class HimEndToEndTests
         Assert.Equal("PLASMA", hiv1Sample.DisplayName);
         Assert.Equal(new[] { "200 uL", "500 uL" },
             hiv1Sample.AllowedVolumes.Select(v => v.Volume));
+        Assert.Contains(hiv1.ControlResults, c => c.Name == "HxV H (+) C");
+        Assert.Contains(hiv1.ControlResults, c => c.Name == "HxV L (+) C");
+        Assert.Contains(hiv1.ControlResults, c => c.Name == "(-) C");
     }
 
     [Fact]

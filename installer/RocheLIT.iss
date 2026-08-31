@@ -8,7 +8,7 @@
 ; The build-installer.ps1 script wires these up automatically.
 
 #ifndef AppVersion
-  #define AppVersion "1.0.25"
+  #define AppVersion "1.0.26"
 #endif
 
 #ifndef PublishDir

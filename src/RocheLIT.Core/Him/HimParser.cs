@@ -42,6 +42,12 @@ namespace RocheLIT.Him
         [GeneratedRegex(@"(?<![A-Za-z0-9])(POS|NEG|RR|NR|VAL|AT|BT|ND)(?![A-Za-z0-9])")]
         private static partial Regex ResultCodeRegex();
 
+        // Control names in the assay-specific "Control results" table. The
+        // PDF extraction can glue words together, so cleanup is applied after
+        // matching.
+        [GeneratedRegex(@"([A-Za-z0-9][A-Za-z0-9/+\-. ]*?)?\s*\([+-]\)\s*(?:C|Ctrl)")]
+        private static partial Regex ControlNameRegex();
+
         // Canonical OBX-8-1 interpretation text for each OBX-5 result code, used
         // to pair every parsed value with an interpretation of equal count. The
         // manual's wording is collapsed by PdfPig, so these fixed descriptions
@@ -81,13 +87,16 @@ namespace RocheLIT.Him
         {
             ArgumentNullException.ThrowIfNull(pages);
 
+            var assays = ParseAssays(pages);
+            ApplyControlResults(assays, pages);
+
             var manual = new HostInterfaceManual
             {
                 Source = source,
                 IngestedAtUtc = DateTimeOffset.UtcNow.ToString("O"),
                 ManualVersion = DetectVersion(pages),
                 MessageTypes = ParseMessageTypes(pages),
-                Assays = ParseAssays(pages),
+                Assays = assays,
             };
 
             return manual;
@@ -493,6 +502,161 @@ namespace RocheLIT.Him
         private static bool UsesPositiveNegativeFallback(AssayDefinition assay) =>
             assay.Description.Contains("qualitative", StringComparison.OrdinalIgnoreCase) &&
             assay.Targets.Count > 0;
+
+        // --- Control results -----------------------------------------------
+
+        private static void ApplyControlResults(
+            IReadOnlyList<AssayDefinition> assays,
+            IReadOnlyList<string> pages)
+        {
+            foreach (var assay in assays)
+            {
+                var caption = ControlCaption(assay);
+                var parsed = ParseControlResultsForAssay(caption, pages);
+                if (parsed.Count == 0 &&
+                    !string.Equals(caption, assay.Name, StringComparison.OrdinalIgnoreCase))
+                {
+                    parsed = ParseControlResultsForAssay(assay.Name, pages);
+                }
+
+                EnsureControlFallbacks(assay, parsed);
+                assay.ControlResults = parsed;
+            }
+        }
+
+        private static List<AssayControlResult> ParseControlResultsForAssay(
+            string caption,
+            IReadOnlyList<string> pages)
+        {
+            if (string.IsNullOrWhiteSpace(caption))
+            {
+                return new List<AssayControlResult>();
+            }
+
+            foreach (var page in pages)
+            {
+                var captionIndex = page.IndexOf(
+                    $"{caption} control results", StringComparison.OrdinalIgnoreCase);
+                if (captionIndex < 0)
+                {
+                    continue;
+                }
+
+                var start = page.LastIndexOf(
+                    "Control results", captionIndex, StringComparison.OrdinalIgnoreCase);
+                if (start < 0)
+                {
+                    start = Math.Max(0, captionIndex - 1000);
+                }
+
+                var region = page[start..captionIndex];
+                var results = ExtractControlNames(region);
+                if (results.Count > 0)
+                {
+                    return results;
+                }
+            }
+
+            return new List<AssayControlResult>();
+        }
+
+        private static List<AssayControlResult> ExtractControlNames(string region)
+        {
+            var byName = new Dictionary<string, AssayControlResult>(StringComparer.OrdinalIgnoreCase);
+            foreach (Match match in ControlNameRegex().Matches(region))
+            {
+                var name = CleanControlName(match.Value);
+                if (name.Length == 0 ||
+                    !name.Contains("C", StringComparison.OrdinalIgnoreCase) ||
+                    byName.ContainsKey(name))
+                {
+                    continue;
+                }
+
+                byName[name] = new AssayControlResult
+                {
+                    Name = name,
+                    IsPositive = name.Contains("(+)", StringComparison.Ordinal),
+                };
+            }
+
+            return byName.Values
+                .OrderBy(c => c.IsPositive ? 0 : 1)
+                .ThenBy(c => c.Name, StringComparer.OrdinalIgnoreCase)
+                .ToList();
+        }
+
+        private static string CleanControlName(string raw)
+        {
+            var cleaned = CollapseSpaces(raw);
+            cleaned = Regex.Replace(cleaned, @"\s*\(\s*([+-])\s*\)\s*", " ($1) ");
+            cleaned = Regex.Replace(cleaned, @"\s+", " ").Trim();
+
+            var signIndex = cleaned.IndexOf('(');
+            if (signIndex < 0)
+            {
+                return string.Empty;
+            }
+
+            var prefix = cleaned[..signIndex].Trim();
+            var suffix = cleaned[signIndex..].Trim();
+            while (true)
+            {
+                var before = prefix;
+                prefix = Regex.Replace(
+                    prefix,
+                    @"^(?:Titer\s+\(value\)|Not used|Error flag|Valid|All|y)\s+",
+                    string.Empty,
+                    RegexOptions.IgnoreCase).Trim();
+                prefix = Regex.Replace(
+                    prefix,
+                    @"^(?:POS|NEG|RR|NR|VAL|AT|BT|ND)\s*",
+                    string.Empty,
+                    RegexOptions.IgnoreCase).Trim();
+
+                if (string.Equals(before, prefix, StringComparison.Ordinal))
+                {
+                    break;
+                }
+            }
+
+            if (suffix.StartsWith("(-)", StringComparison.Ordinal))
+            {
+                prefix = string.Empty;
+            }
+
+            return prefix.Length > 0 ? $"{prefix} {suffix}" : suffix;
+        }
+
+        private static void EnsureControlFallbacks(
+            AssayDefinition assay,
+            List<AssayControlResult> controls)
+        {
+            if (!controls.Any(c => c.IsPositive))
+            {
+                controls.Insert(0, new AssayControlResult
+                {
+                    Name = $"{ControlCaption(assay)} (+) C",
+                    IsPositive = true,
+                });
+            }
+
+            if (!controls.Any(c => !c.IsPositive))
+            {
+                controls.Add(new AssayControlResult
+                {
+                    Name = "(-) C",
+                    IsPositive = false,
+                });
+            }
+        }
+
+        private static string ControlCaption(AssayDefinition assay)
+        {
+            var description = assay.Description.Trim();
+            var marker = description.IndexOf(" is ", StringComparison.OrdinalIgnoreCase);
+            return marker > 0 ? description[..marker].Trim() : assay.Name;
+        }
 
         // --- Helpers --------------------------------------------------------
 

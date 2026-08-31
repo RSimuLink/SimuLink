@@ -141,9 +141,21 @@ namespace RocheLIT.Services
 
             if (wanted.Contains(ExampleWorkflow.ControlTestResult))
             {
-                // Same as the result message but with a QC specimen role ("Q").
-                var control = ResultMessage(input, when, "Q");
-                Add(ExampleWorkflow.ControlTestResult, LawOulR22Builder.Build(control));
+                var info = ExampleWorkflowInfo.For(ExampleWorkflow.ControlTestResult);
+                foreach (var control in LawResultMessageFactory.ControlResultsFor(input.Test))
+                {
+                    var controlMessage = LawResultMessageFactory.CreateControl(
+                        input.Test,
+                        control,
+                        _settings,
+                        timestamp: when);
+                    results.Add(new GeneratedMessage(
+                        ExampleWorkflow.ControlTestResult,
+                        $"{info.Label} - {control.Name}",
+                        info.MessageType,
+                        info.Direction,
+                        LawOulR22Builder.Build(controlMessage).RawMessage));
+                }
             }
 
             return results;

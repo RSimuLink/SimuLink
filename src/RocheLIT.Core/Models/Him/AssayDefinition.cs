@@ -57,6 +57,20 @@ namespace RocheLIT.Models.Him
     }
 
     /// <summary>
+    /// A control result row from an assay's "Control results" table. The
+    /// <see cref="Name"/> value is used as INV-1 in control-result OUL^R22
+    /// messages.
+    /// </summary>
+    public sealed class AssayControlResult
+    {
+        /// <summary>Control name from the manual, e.g. "(-) C" or "HxV H (+) C".</summary>
+        public string Name { get; set; } = string.Empty;
+
+        /// <summary>True for positive control rows, false for negative controls.</summary>
+        public bool IsPositive { get; set; }
+    }
+
+    /// <summary>
     /// An assay (test family) as defined in the "Assays" chapter of the Host
     /// Interface Manual: the LIS mapping for its sample types, tests, targets,
     /// and result codes. This is the catalog the simulator uses to populate the
@@ -81,5 +95,8 @@ namespace RocheLIT.Models.Him
 
         /// <summary>Targets/channels and their result codes.</summary>
         public List<AssayTarget> Targets { get; set; } = new();
+
+        /// <summary>Control result options from the assay's "Control results" table.</summary>
+        public List<AssayControlResult> ControlResults { get; set; } = new();
     }
 }

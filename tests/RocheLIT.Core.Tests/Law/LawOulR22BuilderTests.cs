@@ -162,6 +162,34 @@ public class LawOulR22BuilderTests
     }
 
     [Fact]
+    public void Build_ControlResultUsesEmptySacAndContainerInventoryBeforeObr()
+    {
+        var message = BuildHivMessage();
+        message.Specimen.SampleId = "C76330873877787681534";
+        message.Specimen.SpecimenType = new CodedElement();
+        message.Specimen.Role = "Q";
+        message.Specimen.CarrierId = "1897";
+        message.Specimen.CarrierPosition = "5";
+        message.ContainerInventories.Add(new ReagentInventory
+        {
+            SubstanceId = new CodedElement("HxV H (+) C", "", "99ROC"),
+            Status = new CodedElement("OK", "", "HL70383"),
+            SubstanceType = new CodedElement("CO", "", "HL70384"),
+            ExpiryDateTime = "20250930235959+0200",
+            LotNumber = "K15555",
+        });
+
+        var segments = Segments(LawOulR22Builder.Build(message).RawMessage);
+
+        Assert.Equal("SPM|1|C76330873877787681534&ROCHE|||||||||Q^^HL70369", segments[1]);
+        Assert.Equal("SAC|", segments[2]);
+        Assert.Equal(
+            "INV|HxV H (+) C^^99ROC|OK^^HL70383|CO^^HL70384|||||||||20250930235959+0200||||K15555",
+            segments[3]);
+        Assert.Equal("OBR||||70241-5^HIV^LN", segments[4]);
+    }
+
+    [Fact]
     public void Build_WnvLab29MatchesExpectedTraceShape()
     {
         var test = new TestType

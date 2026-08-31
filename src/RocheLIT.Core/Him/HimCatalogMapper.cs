@@ -29,6 +29,7 @@ namespace RocheLIT.Him
                 .Select(v => new SampleVolume { Volume = $"{v} uL" })
                 .ToList();
             var sampleTypes = ToSampleTypes(assay);
+            var controls = assay.ControlResults.Select(ToControlResult).ToList();
 
             return assay.Tests.Select(test => new TestType
             {
@@ -38,6 +39,7 @@ namespace RocheLIT.Him
                 Targets = targets.Select(CloneTarget).ToList(),
                 AllowedVolumes = volumes.Select(v => new SampleVolume { Volume = v.Volume }).ToList(),
                 AllowedSampleTypes = sampleTypes.Select(CloneSampleType).ToList(),
+                ControlResults = controls.Select(CloneControlResult).ToList(),
             }).ToList();
         }
 
@@ -138,6 +140,18 @@ namespace RocheLIT.Him
             AllowedVolumes = sampleType.AllowedVolumes
                 .Select(v => new SampleVolume { Volume = v.Volume })
                 .ToList(),
+        };
+
+        private static ControlResult ToControlResult(AssayControlResult control) => new()
+        {
+            Name = control.Name,
+            IsPositive = control.IsPositive,
+        };
+
+        private static ControlResult CloneControlResult(ControlResult control) => new()
+        {
+            Name = control.Name,
+            IsPositive = control.IsPositive,
         };
 
         private static IEnumerable<string> VolumeOptions(AssaySampleType sampleType)

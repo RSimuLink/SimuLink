@@ -283,4 +283,65 @@ public class LawResultMessageFactoryTests
             "OBX|2|NA|WNV^WNV^99ROC^S_OTHER^Other Supplemental^IHELAW|1|37.04^36.32",
             ctValues);
     }
+
+    [Fact]
+    public void CreateControl_UsesQcIdentityAndControlInventory()
+    {
+        var test = WnvTest();
+        var msg = LawResultMessageFactory.CreateControl(
+            test,
+            new ControlResult { Name = "WNV(+) C", IsPositive = true },
+            Settings,
+            When);
+
+        Assert.Matches(@"^C[0-9]{20}$", msg.Specimen.SampleId);
+        Assert.Equal("Q", msg.Specimen.Role);
+        Assert.Equal(string.Empty, msg.Specimen.SpecimenType.Identifier);
+
+        var controlInv = Assert.Single(msg.ContainerInventories);
+        Assert.Equal("WNV(+) C", controlInv.SubstanceId.Identifier);
+        Assert.Equal("CO", controlInv.SubstanceType.Identifier);
+    }
+
+    [Fact]
+    public void CreateControl_AlwaysIncludesSupplementalObxAndInventory()
+    {
+        var test = WnvTest();
+        var msg = LawResultMessageFactory.CreateControl(
+            test,
+            new ControlResult { Name = "(-) C", IsPositive = false },
+            Settings,
+            When,
+            sampleId: "C76330873877787681534");
+
+        var testResult = Assert.Single(msg.Tests);
+        Assert.Equal(7, testResult.Reagents.Count);
+        Assert.Contains(testResult.Observations, o => o.ObservationId.CodingSystem.Contains("S_OTHER"));
+        Assert.True(testResult.EmitTcdWhenEmpty);
+    }
+
+    [Fact]
+    public void CreateControl_HighAndLowPositiveControlsUseNumericValues()
+    {
+        var test = WnvTest();
+        var high = LawResultMessageFactory.CreateControl(
+            test,
+            new ControlResult { Name = "HxV H (+) C", IsPositive = true },
+            Settings,
+            When,
+            sampleId: "C11111111111111111111");
+        var low = LawResultMessageFactory.CreateControl(
+            test,
+            new ControlResult { Name = "HxV L (+) C", IsPositive = true },
+            Settings,
+            When,
+            sampleId: "C22222222222222222222");
+
+        Assert.Equal("NM", high.Tests[0].Observations[0].ValueType);
+        Assert.Equal("281", high.Tests[0].Observations[0].Value);
+        Assert.Equal("10*3.{copies}/mL", high.Tests[0].Observations[0].Units!.Identifier);
+        Assert.Equal("NM", low.Tests[0].Observations[0].ValueType);
+        Assert.Equal("630", low.Tests[0].Observations[0].Value);
+        Assert.Equal("10*0.{copies}/mL", low.Tests[0].Observations[0].Units!.Identifier);
+    }
 }

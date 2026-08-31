@@ -25,6 +25,9 @@ namespace RocheLIT.Models.Law
         /// <summary>TCD-9 test consumption volume, UCUM (e.g. "500^uL&amp;&amp;UCUM").</summary>
         public string ConsumptionVolume { get; set; } = string.Empty;
 
+        /// <summary>When true, emits the TCD segment even when no volume is present.</summary>
+        public bool EmitTcdWhenEmpty { get; set; }
+
         /// <summary>Reagents/consumables (INV segments) used for this test.</summary>
         public List<ReagentInventory> Reagents { get; set; } = new();
     }

@@ -51,6 +51,7 @@ partial class MainForm
         txtCarrierPosition = new TextBox();
         chkInventory = new CheckBox();
         chkCtValues = new CheckBox();
+        chkControlResult = new CheckBox();
         btnSendResult = new Button();
 
         // Right: Received order
@@ -197,6 +198,7 @@ partial class MainForm
         grpSend.Controls.Add(txtCarrierPosition);
         grpSend.Controls.Add(chkInventory);
         grpSend.Controls.Add(chkCtValues);
+        grpSend.Controls.Add(chkControlResult);
         grpSend.Controls.Add(btnSendResult);
         grpSend.Location = new Point(12, 92);
         grpSend.Size = new Size(480, 420);
@@ -281,9 +283,14 @@ partial class MainForm
         chkInventory.Text = "Inventory";
 
         chkCtValues.AutoSize = true;
-        chkCtValues.Location = new Point(270, 288);
+        chkCtValues.Location = new Point(258, 288);
         chkCtValues.Name = "chkCtValues";
         chkCtValues.Text = "ct values";
+
+        chkControlResult.AutoSize = true;
+        chkControlResult.Location = new Point(342, 288);
+        chkControlResult.Name = "chkControlResult";
+        chkControlResult.Text = "Control result";
 
         btnSendResult.BackColor = Color.FromArgb(0, 102, 204);
         btnSendResult.ForeColor = Color.White;
@@ -460,6 +467,7 @@ partial class MainForm
     private TextBox txtCarrierPosition;
     private CheckBox chkInventory;
     private CheckBox chkCtValues;
+    private CheckBox chkControlResult;
     private Button btnSendResult;
 
     private GroupBox grpReceived;

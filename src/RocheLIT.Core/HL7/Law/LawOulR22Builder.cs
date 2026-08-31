@@ -7,7 +7,7 @@ namespace RocheLIT.HL7.Law
     /// Builds an x800DM IHE-LAW Test Result (OUL^R22) message.
     ///
     /// Segment order per the Host Interface Manual / observed trace:
-    ///   MSH, SPM, SAC, (per test: OBR, ORC, OBX, TCD, INV*, OBX*)
+    ///   MSH, SPM, SAC, container INV*, (per test: OBR, ORC, OBX, TCD, INV*, OBX*)
     /// </summary>
     public static class LawOulR22Builder
     {
@@ -24,6 +24,11 @@ namespace RocheLIT.HL7.Law
                 LawSpecimenBuilder.BuildSac(message.Specimen),
             };
 
+            foreach (var inv in message.ContainerInventories)
+            {
+                segments.Add(BuildInv(inv));
+            }
+
             foreach (var test in message.Tests)
             {
                 segments.Add(BuildObr(test));
@@ -33,7 +38,7 @@ namespace RocheLIT.HL7.Law
                     segments.Add(BuildObx(test.Observations[0]));
                 }
 
-                if (!string.IsNullOrEmpty(test.ConsumptionVolume))
+                if (!string.IsNullOrEmpty(test.ConsumptionVolume) || test.EmitTcdWhenEmpty)
                 {
                     segments.Add(BuildTcd(test));
                 }

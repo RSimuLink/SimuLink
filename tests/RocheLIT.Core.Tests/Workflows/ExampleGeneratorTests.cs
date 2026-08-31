@@ -56,11 +56,11 @@ public class ExampleGeneratorTests
     }
 
     [Fact]
-    public void Generate_AllSelected_ProducesSevenInCanonicalOrder()
+    public void Generate_AllSelected_ProducesControlSetInCanonicalOrder()
     {
         var msgs = GenerateAll();
 
-        Assert.Equal(7, msgs.Count);
+        Assert.Equal(8, msgs.Count);
         Assert.Collection(msgs,
             m => Assert.Equal(ExampleWorkflow.Lab27WorkOrderRequest, m.Workflow),
             m => Assert.Equal(ExampleWorkflow.Lab27RequestAcknowledge, m.Workflow),
@@ -68,6 +68,7 @@ public class ExampleGeneratorTests
             m => Assert.Equal(ExampleWorkflow.Lab28TestOrderResponse, m.Workflow),
             m => Assert.Equal(ExampleWorkflow.Lab29TestResult, m.Workflow),
             m => Assert.Equal(ExampleWorkflow.Lab29ResultAccepted, m.Workflow),
+            m => Assert.Equal(ExampleWorkflow.ControlTestResult, m.Workflow),
             m => Assert.Equal(ExampleWorkflow.ControlTestResult, m.Workflow));
     }
 
@@ -108,7 +109,8 @@ public class ExampleGeneratorTests
         ExampleWorkflow wf, string type, string direction)
     {
         var gen = new ExampleGenerator(Settings());
-        var msg = Assert.Single(gen.Generate(Input(), new[] { wf }, When));
+        var msgs = gen.Generate(Input(), new[] { wf }, When);
+        var msg = wf == ExampleWorkflow.ControlTestResult ? msgs[0] : Assert.Single(msgs);
 
         Assert.Equal(type, msg.MessageType);
         Assert.Equal(direction, msg.Direction);
@@ -229,11 +231,41 @@ public class ExampleGeneratorTests
     public void ControlResult_UsesQcSpecimenRole()
     {
         var gen = new ExampleGenerator(Settings());
-        var msg = Assert.Single(
-            gen.Generate(Input(), new[] { ExampleWorkflow.ControlTestResult }, When));
-        var spm = msg.RawMessage.Split('\r').First(s => s.StartsWith("SPM"));
+        var msgs = gen.Generate(Input(), new[] { ExampleWorkflow.ControlTestResult }, When);
 
-        Assert.Contains("Q^^HL70369", spm);
+        Assert.Equal(2, msgs.Count);
+        Assert.All(msgs, msg =>
+        {
+            var segments = msg.RawMessage.Split('\r');
+            var spm = segments.First(s => s.StartsWith("SPM"));
+
+            Assert.Contains("Q^^HL70369", spm);
+            Assert.DoesNotContain("$0E0EYXDR", spm);
+            Assert.Matches(@"SPM\|1\|C[0-9]{20}&ROCHE\|", spm);
+            Assert.Equal("SAC|", segments.First(s => s.StartsWith("SAC")));
+            Assert.Contains(segments, s => s.StartsWith("INV|") && s.Contains("CO^^HL70384"));
+            Assert.Contains(segments, s => s.StartsWith("OBX") && s.Contains("S_OTHER"));
+        });
+    }
+
+    [Fact]
+    public void ControlResult_GeneratesAllConfiguredControlNames()
+    {
+        var input = Input();
+        input.Test.ControlResults.AddRange(new[]
+        {
+            new ControlResult { Name = "HxV H (+) C", IsPositive = true },
+            new ControlResult { Name = "HxV L (+) C", IsPositive = true },
+            new ControlResult { Name = "(-) C", IsPositive = false },
+        });
+
+        var gen = new ExampleGenerator(Settings());
+        var msgs = gen.Generate(input, new[] { ExampleWorkflow.ControlTestResult }, When);
+
+        Assert.Equal(3, msgs.Count);
+        Assert.Contains(msgs, m => m.Label.Contains("HxV H (+) C"));
+        Assert.Contains(msgs, m => m.Label.Contains("HxV L (+) C"));
+        Assert.Contains(msgs, m => m.Label.Contains("(-) C"));
     }
 
     [Fact]

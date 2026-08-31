@@ -182,6 +182,19 @@ public class HimParserTests
     }
 
     [Fact]
+    public void ParsesControlResultsForMalariaAndHiv()
+    {
+        var malaria = Assay("Malaria");
+        Assert.Contains(malaria.ControlResults, c => c.Name == "Malaria (+) C" && c.IsPositive);
+        Assert.Contains(malaria.ControlResults, c => c.Name == "(-) C" && !c.IsPositive);
+
+        var hiv1 = Assay("HIV-1");
+        Assert.Contains(hiv1.ControlResults, c => c.Name == "HxV H (+) C" && c.IsPositive);
+        Assert.Contains(hiv1.ControlResults, c => c.Name == "HxV L (+) C" && c.IsPositive);
+        Assert.Contains(hiv1.ControlResults, c => c.Name == "(-) C" && !c.IsPositive);
+    }
+
+    [Fact]
     public void EveryParsedTargetHasMatchingValueAndInterpretationCounts()
     {
         foreach (var target in Manual().Assays.SelectMany(a => a.Targets))

@@ -44,6 +44,11 @@ namespace RocheLIT.Services
             var remembered = HimCatalogPersistence.Load();
             if (remembered is not null)
             {
+                if (bundled is not null)
+                {
+                    FillMissingControlResults(remembered, bundled);
+                }
+
                 HimSettingsImporter.Apply(settings, remembered);
             }
 
@@ -97,6 +102,30 @@ namespace RocheLIT.Services
             }
 
             return null;
+        }
+
+        private static void FillMissingControlResults(
+            Models.Him.HostInterfaceManual target,
+            Models.Him.HostInterfaceManual source)
+        {
+            var sourceByName = source.Assays.ToDictionary(
+                a => a.Name, StringComparer.OrdinalIgnoreCase);
+            foreach (var assay in target.Assays)
+            {
+                if (assay.ControlResults.Count > 0 ||
+                    !sourceByName.TryGetValue(assay.Name, out var sourceAssay))
+                {
+                    continue;
+                }
+
+                assay.ControlResults = sourceAssay.ControlResults
+                    .Select(c => new Models.Him.AssayControlResult
+                    {
+                        Name = c.Name,
+                        IsPositive = c.IsPositive,
+                    })
+                    .ToList();
+            }
         }
 
         private static LitSettings BuildSeed()

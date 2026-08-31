@@ -21,6 +21,12 @@ namespace RocheLIT.Models.Law
         /// <summary>The specimen these results belong to.</summary>
         public Specimen Specimen { get; set; } = new();
 
+        /// <summary>
+        /// Container-level inventory segments. Control-result messages use this
+        /// for the control material INV immediately after SAC.
+        /// </summary>
+        public List<ReagentInventory> ContainerInventories { get; set; } = new();
+
         /// <summary>The test results carried by this message.</summary>
         public List<LawTestResult> Tests { get; set; } = new();
     }
