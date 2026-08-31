@@ -347,16 +347,28 @@ namespace RocheLIT.Him
         /// <summary>
         /// Fills each target's OBX-5 result values (and their paired OBX-8-1
         /// interpretations) from the assay's "Sample result codes for OBX
-        /// segment" table. The manual lists one shared result-code set per
-        /// assay, so every target receives the same values.
+        /// segment" table. Most assays list one shared result-code set. Mixed
+        /// qualitative/quantitative assays can list different result families
+        /// for their targets, so those targets are handled before the shared
+        /// fallback is applied.
         /// </summary>
         private static void ApplyResultCodes(AssayDefinition assay, string block)
         {
             var codes = ParseResultCodes(block);
+            if (ApplyMixedQualitativeQuantitativeResultCodes(assay, codes))
+            {
+                return;
+            }
+
             if (codes.Count == 0 && UsesReactiveNonReactiveFallback(assay))
             {
                 codes.Add("RR");
                 codes.Add("NR");
+            }
+            else if (codes.Count == 0 && UsesPositiveNegativeFallback(assay))
+            {
+                codes.Add("POS");
+                codes.Add("NEG");
             }
 
             if (codes.Count == 0)
@@ -374,6 +386,57 @@ namespace RocheLIT.Him
                 target.ObservationValues = new List<string>(codes);
                 target.InterpretationCodes = new List<string>(interpretations);
             }
+        }
+
+        private static bool ApplyMixedQualitativeQuantitativeResultCodes(
+            AssayDefinition assay,
+            IReadOnlyList<string> parsedCodes)
+        {
+            if (!assay.Description.Contains(
+                    "qualitative and quantitative", StringComparison.OrdinalIgnoreCase))
+            {
+                return false;
+            }
+
+            var qualitativeCodes = CodesOrDefault(parsedCodes, new[] { "POS", "NEG" });
+            var quantitativeCodes = CodesOrDefault(parsedCodes, new[] { "VAL", "AT", "BT", "ND" });
+            var applied = false;
+
+            foreach (var target in assay.Targets)
+            {
+                var signature = $"{target.Name} {target.ObservationIdentifier}";
+                if (signature.Contains("Qual", StringComparison.OrdinalIgnoreCase))
+                {
+                    SetTargetResultCodes(target, qualitativeCodes);
+                    applied = true;
+                }
+                else if (signature.Contains("Quant", StringComparison.OrdinalIgnoreCase))
+                {
+                    SetTargetResultCodes(target, quantitativeCodes);
+                    applied = true;
+                }
+            }
+
+            return applied && assay.Targets.All(t => t.ObservationValues.Count > 0);
+        }
+
+        private static List<string> CodesOrDefault(
+            IReadOnlyList<string> parsedCodes,
+            IReadOnlyList<string> defaults)
+        {
+            var values = defaults
+                .Where(parsedCodes.Contains)
+                .ToList();
+
+            return values.Count > 0 ? values : defaults.ToList();
+        }
+
+        private static void SetTargetResultCodes(AssayTarget target, IReadOnlyList<string> codes)
+        {
+            target.ObservationValues = codes.ToList();
+            target.InterpretationCodes = codes
+                .Select(c => ResultInterpretations.TryGetValue(c, out var text) ? text : c)
+                .ToList();
         }
 
         private static List<string> ParseResultCodes(string block)
@@ -417,6 +480,10 @@ namespace RocheLIT.Him
             assay.Description.Contains("qualitative", StringComparison.OrdinalIgnoreCase) &&
             assay.Description.Contains("multi-channel", StringComparison.OrdinalIgnoreCase) &&
             assay.Description.Contains("blood screening", StringComparison.OrdinalIgnoreCase);
+
+        private static bool UsesPositiveNegativeFallback(AssayDefinition assay) =>
+            assay.Description.Contains("qualitative", StringComparison.OrdinalIgnoreCase) &&
+            assay.Targets.Count > 0;
 
         // --- Helpers --------------------------------------------------------
 

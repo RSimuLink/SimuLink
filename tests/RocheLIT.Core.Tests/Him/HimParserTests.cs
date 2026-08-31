@@ -147,12 +147,48 @@ public class HimParserTests
     }
 
     [Fact]
+    public void ParsesSarsCov2DuoTargetSpecificResultCodes()
+    {
+        var duo = Assert.Single(Manual().Assays, a =>
+            a.Description.StartsWith("SARS-CoV-2 Duo is", StringComparison.OrdinalIgnoreCase));
+
+        var qualitative = Assert.Single(duo.Targets, t =>
+            t.Name.Contains("Qual", StringComparison.OrdinalIgnoreCase));
+        Assert.Equal(new[] { "POS", "NEG" }, qualitative.ObservationValues);
+        Assert.Equal(new[] { "Positive", "Negative" }, qualitative.InterpretationCodes);
+
+        var quantitative = Assert.Single(duo.Targets, t =>
+            t.Name.Contains("Quant", StringComparison.OrdinalIgnoreCase));
+        Assert.Equal(new[] { "VAL", "AT", "BT", "ND" }, quantitative.ObservationValues);
+        Assert.Equal(
+            new[] { "Valid", "Above Titer", "Below Titer", "Not Detected" },
+            quantitative.InterpretationCodes);
+    }
+
+    [Fact]
     public void EveryParsedTargetHasMatchingValueAndInterpretationCounts()
     {
         foreach (var target in Manual().Assays.SelectMany(a => a.Targets))
         {
             Assert.Equal(
                 target.ObservationValues.Count, target.InterpretationCodes.Count);
+        }
+    }
+
+    [Fact]
+    public void NoTargetMixesQualitativeAndQuantitativeResultFamilies()
+    {
+        var qualitative = new HashSet<string>(new[] { "POS", "NEG" }, StringComparer.Ordinal);
+        var quantitative = new HashSet<string>(
+            new[] { "VAL", "AT", "BT", "ND" }, StringComparer.Ordinal);
+
+        foreach (var target in Manual().Assays.SelectMany(a => a.Targets))
+        {
+            var hasQualitative = target.ObservationValues.Any(qualitative.Contains);
+            var hasQuantitative = target.ObservationValues.Any(quantitative.Contains);
+
+            Assert.False(hasQualitative && hasQuantitative,
+                $"{target.Name} ({target.ObservationIdentifier}) mixes qualitative and quantitative result choices.");
         }
     }
 
