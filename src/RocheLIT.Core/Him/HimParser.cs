@@ -398,7 +398,8 @@ namespace RocheLIT.Him
                 return false;
             }
 
-            var qualitativeCodes = CodesOrDefault(parsedCodes, new[] { "POS", "NEG" });
+            var positiveNegativeCodes = CodesOrDefault(parsedCodes, new[] { "POS", "NEG" });
+            var reactiveNonReactiveCodes = CodesOrDefault(parsedCodes, new[] { "RR", "NR" });
             var quantitativeCodes = CodesOrDefault(parsedCodes, new[] { "VAL", "AT", "BT", "ND" });
             var applied = false;
 
@@ -407,12 +408,20 @@ namespace RocheLIT.Him
                 var signature = $"{target.Name} {target.ObservationIdentifier}";
                 if (signature.Contains("Qual", StringComparison.OrdinalIgnoreCase))
                 {
-                    SetTargetResultCodes(target, qualitativeCodes);
+                    SetTargetResultCodes(target, positiveNegativeCodes);
                     applied = true;
                 }
-                else if (signature.Contains("Quant", StringComparison.OrdinalIgnoreCase))
+                else if (signature.Contains("Quant", StringComparison.OrdinalIgnoreCase) ||
+                    signature.Contains("B19", StringComparison.OrdinalIgnoreCase))
                 {
                     SetTargetResultCodes(target, quantitativeCodes);
+                    applied = true;
+                }
+                else if (assay.Description.Contains(
+                        "blood screening", StringComparison.OrdinalIgnoreCase) &&
+                    parsedCodes.Any(c => string.Equals(c, "RR", StringComparison.Ordinal)))
+                {
+                    SetTargetResultCodes(target, reactiveNonReactiveCodes);
                     applied = true;
                 }
             }

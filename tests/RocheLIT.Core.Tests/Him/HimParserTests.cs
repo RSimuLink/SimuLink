@@ -166,6 +166,22 @@ public class HimParserTests
     }
 
     [Fact]
+    public void ParsesDpxTargetSpecificResultCodes()
+    {
+        var dpx = Assay("DPX");
+
+        var hav = Assert.Single(dpx.Targets, t => t.Name == "HAV");
+        Assert.Equal(new[] { "RR", "NR" }, hav.ObservationValues);
+        Assert.Equal(new[] { "Reactive", "Non-Reactive" }, hav.InterpretationCodes);
+
+        var b19 = Assert.Single(dpx.Targets, t => t.Name == "B19");
+        Assert.Equal(new[] { "VAL", "AT", "BT", "ND" }, b19.ObservationValues);
+        Assert.Equal(
+            new[] { "Valid", "Above Titer", "Below Titer", "Not Detected" },
+            b19.InterpretationCodes);
+    }
+
+    [Fact]
     public void EveryParsedTargetHasMatchingValueAndInterpretationCounts()
     {
         foreach (var target in Manual().Assays.SelectMany(a => a.Targets))
@@ -176,19 +192,22 @@ public class HimParserTests
     }
 
     [Fact]
-    public void NoTargetMixesQualitativeAndQuantitativeResultFamilies()
+    public void NoTargetMixesResultFamilies()
     {
-        var qualitative = new HashSet<string>(new[] { "POS", "NEG" }, StringComparer.Ordinal);
-        var quantitative = new HashSet<string>(
-            new[] { "VAL", "AT", "BT", "ND" }, StringComparer.Ordinal);
+        var resultFamilies = new[]
+        {
+            new HashSet<string>(new[] { "POS", "NEG" }, StringComparer.Ordinal),
+            new HashSet<string>(new[] { "RR", "NR" }, StringComparer.Ordinal),
+            new HashSet<string>(new[] { "VAL", "AT", "BT", "ND" }, StringComparer.Ordinal),
+        };
 
         foreach (var target in Manual().Assays.SelectMany(a => a.Targets))
         {
-            var hasQualitative = target.ObservationValues.Any(qualitative.Contains);
-            var hasQuantitative = target.ObservationValues.Any(quantitative.Contains);
+            var matchedFamilies = resultFamilies.Count(family =>
+                target.ObservationValues.Any(family.Contains));
 
-            Assert.False(hasQualitative && hasQuantitative,
-                $"{target.Name} ({target.ObservationIdentifier}) mixes qualitative and quantitative result choices.");
+            Assert.True(matchedFamilies <= 1,
+                $"{target.Name} ({target.ObservationIdentifier}) mixes incompatible result choice families.");
         }
     }
 
