@@ -16,6 +16,7 @@ public partial class MainForm : Form
     private LisConnectionService? _connection;
     private ReceivedOrder? _lastReceivedOrder;
     private bool _isBindingCatalog;
+    private readonly Dictionary<string, string> _targetResults = new(StringComparer.OrdinalIgnoreCase);
 
     public MainForm()
     {
@@ -104,10 +105,10 @@ public partial class MainForm : Form
         var test = cmbTestType.SelectedItem as TestType;
         var sampleTypes = ResultEntryPresenter.SampleTypesFor(test, _settings.SampleTypes).ToList();
         var resultValues = ResultEntryPresenter.ResultValuesFor(test).ToList();
-        var usesTargetGrid = test is { Targets.Count: > 1 };
+        var usesTargetSelector = test is { Targets.Count: > 1 };
 
         _isBindingCatalog = true;
-        ApplyResultLayout(usesTargetGrid);
+        ApplyResultLayout(usesTargetSelector);
 
         cmbSampleType.DataSource = null;
         cmbSampleType.DataSource = sampleTypes;
@@ -117,20 +118,21 @@ public partial class MainForm : Form
         }
 
         cmbResult.DataSource = null;
-        if (!usesTargetGrid)
+        if (!usesTargetSelector)
         {
             cmbResult.DataSource = resultValues;
         }
 
-        PopulateTargetResultGrid(test);
+        ResetTargetResults(test);
 
         cmbSampleVolume.DataSource = null;
 
         _isBindingCatalog = false;
 
         cmbSampleType.Enabled = test is not null && sampleTypes.Count > 0;
-        cmbResult.Enabled = !usesTargetGrid && test is not null && resultValues.Count > 0;
-        gridTargetResults.Enabled = usesTargetGrid && gridTargetResults.Rows.Count > 0;
+        cmbResult.Enabled = !usesTargetSelector && test is not null && resultValues.Count > 0;
+        txtTargetResultsSummary.Enabled = usesTargetSelector && _targetResults.Count > 0;
+        btnTargetResults.Enabled = usesTargetSelector && _targetResults.Count > 0;
         cmbSampleVolume.Enabled = false;
     }
 
@@ -150,81 +152,91 @@ public partial class MainForm : Form
         cmbSampleVolume.Enabled = sampleType is not null && volumes.Count > 0;
     }
 
-    private void PopulateTargetResultGrid(TestType? test)
+    private void ResetTargetResults(TestType? test)
     {
-        gridTargetResults.Rows.Clear();
+        _targetResults.Clear();
         if (test is not { Targets.Count: > 1 })
         {
+            UpdateTargetResultsSummary();
             return;
         }
 
         foreach (var target in test.Targets)
         {
             var values = ResultEntryPresenter.ResultValuesForTarget(target).ToList();
-            if (values.Count == 0)
+            var defaultValue = values.FirstOrDefault();
+            if (!string.IsNullOrWhiteSpace(defaultValue))
             {
-                continue;
+                _targetResults[target.ObservationIdentifier] = defaultValue;
             }
-
-            var rowIndex = gridTargetResults.Rows.Add();
-            var row = gridTargetResults.Rows[rowIndex];
-            row.Tag = target;
-            row.Cells[0].Value = target.Name;
-            row.Cells[1] = new DataGridViewComboBoxCell
-            {
-                DataSource = values,
-                Value = values[0],
-            };
         }
+
+        UpdateTargetResultsSummary();
     }
 
     private IReadOnlyDictionary<string, string> TargetResultsFor(TestType test)
     {
-        var results = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
         if (test.Targets.Count <= 1)
         {
-            return results;
+            return new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
         }
 
-        foreach (DataGridViewRow row in gridTargetResults.Rows)
-        {
-            if (row.Tag is not Target target)
-            {
-                continue;
-            }
-
-            var value = row.Cells[1].Value?.ToString() ?? string.Empty;
-            if (value.Length > 0)
-            {
-                results[target.ObservationIdentifier] = value;
-            }
-        }
-
-        return results;
+        return new Dictionary<string, string>(_targetResults, StringComparer.OrdinalIgnoreCase);
     }
 
-    private void ApplyResultLayout(bool usesTargetGrid)
+    private void UpdateTargetResultsSummary()
     {
-        var offset = usesTargetGrid ? 72 : 0;
-        lblResult.Text = usesTargetGrid ? "Results:" : "Result:";
-        cmbResult.Visible = !usesTargetGrid;
-        gridTargetResults.Visible = usesTargetGrid;
+        var test = cmbTestType.SelectedItem as TestType;
+        if (test is not { Targets.Count: > 1 } || _targetResults.Count == 0)
+        {
+            txtTargetResultsSummary.Text = string.Empty;
+            return;
+        }
 
-        MoveToY(lblSampleType, 144 + offset);
-        MoveToY(cmbSampleType, 141 + offset);
-        MoveToY(lblSampleVolume, 180 + offset);
-        MoveToY(cmbSampleVolume, 177 + offset);
-        MoveToY(lblRackId, 216 + offset);
-        MoveToY(txtRackId, 213 + offset);
-        MoveToY(lblCarrierPosition, 252 + offset);
-        MoveToY(txtCarrierPosition, 249 + offset);
-        MoveToY(chkInventory, 288 + offset);
-        MoveToY(chkCtValues, 288 + offset);
-        MoveToY(btnSendResult, 330 + offset);
+        txtTargetResultsSummary.Text = string.Join("; ", test.Targets
+            .Select(t => $"{t.Name}: {TargetResultFor(t)}"));
     }
 
-    private static void MoveToY(Control control, int y) =>
-        control.Location = new Point(control.Location.X, y);
+    private string TargetResultFor(Target target)
+    {
+        if (_targetResults.TryGetValue(target.ObservationIdentifier, out var value))
+        {
+            return value;
+        }
+
+        return ResultEntryPresenter.ResultValuesForTarget(target).FirstOrDefault() ?? string.Empty;
+    }
+
+    private void ApplyResultLayout(bool usesTargetSelector)
+    {
+        lblResult.Text = usesTargetSelector ? "Results:" : "Result:";
+        cmbResult.Visible = !usesTargetSelector;
+        txtTargetResultsSummary.Visible = usesTargetSelector;
+        btnTargetResults.Visible = usesTargetSelector;
+    }
+
+    private void btnTargetResults_Click(object? sender, EventArgs e)
+    {
+        var test = cmbTestType.SelectedItem as TestType;
+        if (test is not { Targets.Count: > 1 })
+        {
+            return;
+        }
+
+        using var form = new TargetResultsForm(test, _targetResults);
+        if (form.ShowDialog(this) != DialogResult.OK)
+        {
+            return;
+        }
+
+        _targetResults.Clear();
+        foreach (var pair in form.TargetResults)
+        {
+            _targetResults[pair.Key] = pair.Value;
+        }
+
+        UpdateTargetResultsSummary();
+    }
 
     // --- Connection ---------------------------------------------------------
 
