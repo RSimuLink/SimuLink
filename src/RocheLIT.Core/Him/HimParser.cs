@@ -285,6 +285,7 @@ namespace RocheLIT.Him
                     Name = CleanName(name),
                     SpecimenType = m.Groups[1].Value.Trim(),
                     VolumeMicroliters = m.Groups[2].Value.Trim(),
+                    VolumeOptionsMicroliters = ParseVolumeOptions(region, m),
                 });
                 lastEnd = m.Index + m.Length;
             }
@@ -437,6 +438,7 @@ namespace RocheLIT.Him
             // Names sometimes pick up trailing/leading section words or footnote
             // marks; keep the trailing token run that looks like a label.
             var cleaned = raw.Trim();
+            cleaned = Regex.Replace(cleaned, @"^(?:/\s*\d+\s*)+", string.Empty).Trim();
             // Drop a leading "y" block-marker glyph if it bled in.
             if (cleaned.StartsWith('y'))
             {
@@ -444,6 +446,30 @@ namespace RocheLIT.Him
             }
 
             return CollapseSpaces(cleaned);
+        }
+
+        private static List<string> ParseVolumeOptions(string region, Match rowMatch)
+        {
+            var values = new List<string> { rowMatch.Groups[2].Value.Trim() };
+            var index = rowMatch.Index + rowMatch.Length;
+            while (index < region.Length)
+            {
+                var alt = Regex.Match(region[index..], @"^\s*/\s*(\d+)");
+                if (!alt.Success)
+                {
+                    break;
+                }
+
+                var value = alt.Groups[1].Value.Trim();
+                if (!values.Contains(value, StringComparer.Ordinal))
+                {
+                    values.Add(value);
+                }
+
+                index += alt.Length;
+            }
+
+            return values;
         }
 
         private static string CollapseSpaces(string value) =>

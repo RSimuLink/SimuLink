@@ -16,5 +16,11 @@ namespace RocheLIT.Models
         /// Falls back to <see cref="Hl7Code"/> when not populated.
         /// </summary>
         public string SpecimenCode { get; set; } = string.Empty;
+
+        /// <summary>
+        /// Sample volumes allowed for this sample type in the selected assay.
+        /// Empty means the selected test's volume list or global catalog applies.
+        /// </summary>
+        public List<SampleVolume> AllowedVolumes { get; set; } = new();
     }
 }

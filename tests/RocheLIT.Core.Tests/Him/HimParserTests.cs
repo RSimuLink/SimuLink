@@ -106,6 +106,27 @@ public class HimParserTests
     }
 
     [Fact]
+    public void ParsesAssaySpecificSampleTypesAndInputVolumes()
+    {
+        var hev = Assay("HEV");
+        var hevSample = Assert.Single(hev.SampleTypes);
+        Assert.Equal("PLASMA", hevSample.Name);
+        Assert.Equal("PLAS^plasma^HL70487", hevSample.SpecimenType);
+
+        var malaria = Assay("Malaria");
+        var malariaSample = Assert.Single(malaria.SampleTypes);
+        Assert.Equal("Whole Blood", malariaSample.Name);
+        Assert.Equal("BLD^Whole Blood^HL70487", malariaSample.SpecimenType);
+
+        var mpxe = Assay("MPX-E");
+        Assert.Equal(
+            new[] { "PLASMA", "SERUM", "CADAVERIC PLASMA", "CADAVERIC SERUM" },
+            mpxe.SampleTypes.Select(s => s.Name));
+        Assert.All(mpxe.SampleTypes, sample =>
+            Assert.Equal(new[] { "850", "150" }, sample.VolumeOptionsMicroliters));
+    }
+
+    [Fact]
     public void EveryParsedTargetHasMatchingValueAndInterpretationCounts()
     {
         foreach (var target in Manual().Assays.SelectMany(a => a.Targets))

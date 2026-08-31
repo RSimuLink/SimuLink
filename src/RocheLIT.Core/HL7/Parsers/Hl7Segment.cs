@@ -11,15 +11,19 @@ namespace RocheLIT.HL7.Parsers
         private readonly string[] _fields;
         private readonly Hl7Encoding _encoding;
 
-        public Hl7Segment(string name, string[] fields, Hl7Encoding encoding)
+        public Hl7Segment(string name, string[] fields, Hl7Encoding encoding, string rawText = "")
         {
             Name = name;
             _fields = fields;
             _encoding = encoding;
+            RawText = rawText;
         }
 
         /// <summary>Three-character segment name (e.g. "OBX").</summary>
         public string Name { get; }
+
+        /// <summary>Original segment text, before fields were split.</summary>
+        public string RawText { get; }
 
         /// <summary>Number of fields (excluding the segment name).</summary>
         public int FieldCount => _fields.Length;

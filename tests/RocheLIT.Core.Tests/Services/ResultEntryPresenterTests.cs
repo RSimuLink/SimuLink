@@ -78,6 +78,53 @@ public class ResultEntryPresenterTests
         Assert.Equal(new[] { "500 uL" }, volumes.Select(v => v.Volume));
     }
 
+    [Fact]
+    public void VolumesFor_SelectedSampleTypeWithAllowedVolumes_UsesThem()
+    {
+        var test = new TestType { AllowedVolumes = { new SampleVolume { Volume = "850 uL" } } };
+        var sampleType = new SampleType
+        {
+            AllowedVolumes = { new SampleVolume { Volume = "150 uL" } },
+        };
+        var catalog = new List<SampleVolume> { new() { Volume = "500 uL" } };
+
+        var volumes = ResultEntryPresenter.VolumesFor(test, sampleType, catalog);
+
+        Assert.Equal(new[] { "150 uL" }, volumes.Select(v => v.Volume));
+    }
+
+    // --- SampleTypesFor -----------------------------------------------------
+
+    [Fact]
+    public void SampleTypesFor_TestWithAllowedSampleTypes_UsesThem()
+    {
+        var test = new TestType
+        {
+            AllowedSampleTypes =
+            {
+                new SampleType { DisplayName = "Whole Blood", Hl7Code = "BLD" },
+            },
+        };
+        var catalog = new List<SampleType> { new() { DisplayName = "Plasma", Hl7Code = "PLAS" } };
+
+        var sampleTypes = ResultEntryPresenter.SampleTypesFor(test, catalog);
+
+        var sample = Assert.Single(sampleTypes);
+        Assert.Equal("BLD", sample.Hl7Code);
+    }
+
+    [Fact]
+    public void SampleTypesFor_TestWithoutAllowedSampleTypes_FallsBackToCatalog()
+    {
+        var test = new TestType();
+        var catalog = new List<SampleType> { new() { DisplayName = "Plasma", Hl7Code = "PLAS" } };
+
+        var sampleTypes = ResultEntryPresenter.SampleTypesFor(test, catalog);
+
+        var sample = Assert.Single(sampleTypes);
+        Assert.Equal("PLAS", sample.Hl7Code);
+    }
+
     // --- EffectiveResultValue ----------------------------------------------
 
     [Fact]

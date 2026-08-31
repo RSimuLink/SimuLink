@@ -62,13 +62,13 @@ namespace RocheLIT.HL7.Parsers
                 fields[0] = encoding.FieldSeparator.ToString();        // MSH-1
                 fields[1] = line.Length >= 8 ? line.Substring(4, 4) : string.Empty; // MSH-2
                 Array.Copy(rest, 0, fields, 2, rest.Length);
-                return new Hl7Segment(name, fields, encoding);
+                return new Hl7Segment(name, fields, encoding, line);
             }
 
             var parts = line.Split(encoding.FieldSeparator);
             // Drop the segment name; remaining entries are the fields.
             var segmentFields = parts.Skip(1).ToArray();
-            return new Hl7Segment(name, segmentFields, encoding);
+            return new Hl7Segment(name, segmentFields, encoding, line);
         }
     }
 }

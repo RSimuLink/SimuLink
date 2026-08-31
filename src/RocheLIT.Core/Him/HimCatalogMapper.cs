@@ -23,11 +23,12 @@ namespace RocheLIT.Him
 
             var targets = assay.Targets.Select(ToTarget).ToList();
             var volumes = assay.SampleTypes
-                .Select(s => s.VolumeMicroliters)
+                .SelectMany(VolumeOptions)
                 .Where(v => v.Length > 0)
                 .Distinct()
                 .Select(v => new SampleVolume { Volume = $"{v} uL" })
                 .ToList();
+            var sampleTypes = ToSampleTypes(assay);
 
             return assay.Tests.Select(test => new TestType
             {
@@ -36,6 +37,7 @@ namespace RocheLIT.Him
                 // Clone targets per test so edits in the UI don't alias.
                 Targets = targets.Select(CloneTarget).ToList(),
                 AllowedVolumes = volumes.Select(v => new SampleVolume { Volume = v.Volume }).ToList(),
+                AllowedSampleTypes = sampleTypes.Select(CloneSampleType).ToList(),
             }).ToList();
         }
 
@@ -52,6 +54,9 @@ namespace RocheLIT.Him
                     Hl7Code = s.SpecimenType.Split('^')[0],
                     // Full SPM-4 coded element (e.g. "PLAS^plasma^HL70487").
                     SpecimenCode = s.SpecimenType,
+                    AllowedVolumes = VolumeOptions(s)
+                        .Select(v => new SampleVolume { Volume = $"{v} uL" })
+                        .ToList(),
                 })
                 .ToList();
         }
@@ -75,7 +80,12 @@ namespace RocheLIT.Him
                 {
                     if (sample.Hl7Code.Length > 0 && !byCode.ContainsKey(sample.Hl7Code))
                     {
-                        byCode[sample.Hl7Code] = sample;
+                        byCode[sample.Hl7Code] = CloneSampleType(sample);
+                    }
+                    else if (sample.Hl7Code.Length > 0 &&
+                        byCode.TryGetValue(sample.Hl7Code, out var existing))
+                    {
+                        MergeVolumes(existing.AllowedVolumes, sample.AllowedVolumes);
                     }
                 }
             }
@@ -95,7 +105,7 @@ namespace RocheLIT.Him
 
             return manual.Assays
                 .SelectMany(a => a.SampleTypes)
-                .Select(s => s.VolumeMicroliters)
+                .SelectMany(VolumeOptions)
                 .Where(v => v.Length > 0)
                 .Distinct()
                 .OrderBy(v => int.TryParse(v, out var n) ? n : int.MaxValue)
@@ -119,5 +129,34 @@ namespace RocheLIT.Him
             ObservationValues = new List<string>(target.ObservationValues),
             InterpretationCodes = new List<string>(target.InterpretationCodes),
         };
+
+        private static SampleType CloneSampleType(SampleType sampleType) => new()
+        {
+            DisplayName = sampleType.DisplayName,
+            Hl7Code = sampleType.Hl7Code,
+            SpecimenCode = sampleType.SpecimenCode,
+            AllowedVolumes = sampleType.AllowedVolumes
+                .Select(v => new SampleVolume { Volume = v.Volume })
+                .ToList(),
+        };
+
+        private static IEnumerable<string> VolumeOptions(AssaySampleType sampleType) =>
+            sampleType.VolumeOptionsMicroliters.Count > 0
+                ? sampleType.VolumeOptionsMicroliters
+                : new[] { sampleType.VolumeMicroliters };
+
+        private static void MergeVolumes(List<SampleVolume> target, IEnumerable<SampleVolume> source)
+        {
+            var existing = target
+                .Select(v => v.Volume)
+                .ToHashSet(StringComparer.OrdinalIgnoreCase);
+            foreach (var volume in source)
+            {
+                if (volume.Volume.Length > 0 && existing.Add(volume.Volume))
+                {
+                    target.Add(new SampleVolume { Volume = volume.Volume });
+                }
+            }
+        }
     }
 }

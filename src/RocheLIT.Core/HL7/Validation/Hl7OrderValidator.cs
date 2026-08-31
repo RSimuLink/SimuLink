@@ -48,6 +48,11 @@ namespace RocheLIT.HL7.Validation
                     continue;
                 }
 
+                if (segment.Name == "MSH")
+                {
+                    ValidateMshBoundary(segment, occurrence, issues);
+                }
+
                 ValidateFieldCount(segment, occurrence, rule, issues);
                 ValidateFieldLengths(segment, occurrence, rule, issues);
             }
@@ -55,6 +60,34 @@ namespace RocheLIT.HL7.Validation
             ValidateRequiredSegments(occurrences, issues);
 
             return issues;
+        }
+
+        private static void ValidateMshBoundary(
+            Hl7Segment segment,
+            int occurrence,
+            List<Hl7ValidationIssue> issues)
+        {
+            var raw = segment.RawText;
+            var encodingChars = raw.Length >= 8 ? raw.Substring(4, 4) : segment.Field(2);
+            if (encodingChars != "^~\\&")
+            {
+                issues.Add(new Hl7ValidationIssue(
+                    "MSH",
+                    occurrence,
+                    2,
+                    "MSH-2 must be ^~\\& (ASCII 094, 126, 092, 038)."));
+            }
+
+            var fieldSeparator = segment.Field(1);
+            var expectedSeparator = fieldSeparator.Length == 1 ? fieldSeparator[0] : '|';
+            if (raw.Length <= 8 || raw[8] != expectedSeparator)
+            {
+                issues.Add(new Hl7ValidationIssue(
+                    "MSH",
+                    occurrence,
+                    3,
+                    "missing field separator after MSH-2; MSH-3 must start after ^~\\&|."));
+            }
         }
 
         private static void ValidateRequiredSegments(

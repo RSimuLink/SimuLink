@@ -15,6 +15,7 @@ public partial class MainForm : Form
     private readonly ActivityLog _log = new();
     private LisConnectionService? _connection;
     private ReceivedOrder? _lastReceivedOrder;
+    private bool _isBindingCatalog;
 
     public MainForm()
     {
@@ -51,8 +52,6 @@ public partial class MainForm : Form
     private void LoadUiData()
     {
         BindCatalog();
-
-        PopulateResults();
     }
 
     /// <summary>
@@ -61,34 +60,86 @@ public partial class MainForm : Form
     /// </summary>
     private void BindCatalog()
     {
+        _isBindingCatalog = true;
+
         cmbTestType.DisplayMember = nameof(TestType.Name);
         cmbTestType.DataSource = null;
         cmbTestType.DataSource = _settings.TestTypes;
+        cmbTestType.SelectedIndex = -1;
 
         cmbSampleType.DisplayMember = nameof(SampleType.DisplayName);
         cmbSampleType.DataSource = null;
-        cmbSampleType.DataSource = _settings.SampleTypes;
 
         cmbSampleVolume.DisplayMember = nameof(SampleVolume.Volume);
         cmbSampleVolume.DataSource = null;
-        cmbSampleVolume.DataSource = _settings.SampleVolumes;
 
-        PopulateResults();
+        cmbResult.DataSource = null;
+
+        _isBindingCatalog = false;
+        RefreshDependentDropdowns();
     }
 
     private void cmbTestType_SelectedIndexChanged(object? sender, EventArgs e)
     {
-        var test = cmbTestType.SelectedItem as TestType;
-        cmbSampleVolume.DataSource =
-            ResultEntryPresenter.VolumesFor(test, _settings.SampleVolumes).ToList();
+        if (_isBindingCatalog)
+        {
+            return;
+        }
 
-        PopulateResults();
+        RefreshDependentDropdowns();
     }
 
-    private void PopulateResults()
+    private void cmbSampleType_SelectedIndexChanged(object? sender, EventArgs e)
+    {
+        if (_isBindingCatalog)
+        {
+            return;
+        }
+
+        RefreshSampleVolumes();
+    }
+
+    private void RefreshDependentDropdowns()
     {
         var test = cmbTestType.SelectedItem as TestType;
-        cmbResult.DataSource = ResultEntryPresenter.ResultValuesFor(test).ToList();
+        var sampleTypes = ResultEntryPresenter.SampleTypesFor(test, _settings.SampleTypes).ToList();
+        var resultValues = ResultEntryPresenter.ResultValuesFor(test).ToList();
+
+        _isBindingCatalog = true;
+
+        cmbSampleType.DataSource = null;
+        cmbSampleType.DataSource = sampleTypes;
+        if (sampleTypes.Count > 0)
+        {
+            cmbSampleType.SelectedIndex = -1;
+        }
+
+        cmbResult.DataSource = null;
+        cmbResult.DataSource = resultValues;
+
+        cmbSampleVolume.DataSource = null;
+
+        _isBindingCatalog = false;
+
+        cmbSampleType.Enabled = test is not null && sampleTypes.Count > 0;
+        cmbResult.Enabled = test is not null && resultValues.Count > 0;
+        cmbSampleVolume.Enabled = false;
+    }
+
+    private void RefreshSampleVolumes()
+    {
+        var test = cmbTestType.SelectedItem as TestType;
+        var sampleType = cmbSampleType.SelectedItem as SampleType;
+        var volumes = sampleType is null
+            ? new List<SampleVolume>()
+            : ResultEntryPresenter.VolumesFor(test, sampleType, _settings.SampleVolumes).ToList();
+
+        _isBindingCatalog = true;
+        cmbSampleVolume.DataSource = null;
+        cmbSampleVolume.DataSource = volumes;
+        _isBindingCatalog = false;
+
+        cmbSampleVolume.Enabled = sampleType is not null && volumes.Count > 0;
     }
 
     // --- Connection ---------------------------------------------------------

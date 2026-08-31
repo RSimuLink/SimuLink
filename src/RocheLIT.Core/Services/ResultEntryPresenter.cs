@@ -33,7 +33,26 @@ namespace RocheLIT.Services
         public static IReadOnlyList<SampleVolume> VolumesFor(
             TestType? test, IReadOnlyList<SampleVolume> catalogVolumes)
         {
+            return VolumesFor(test, sampleType: null, catalogVolumes);
+        }
+
+        /// <summary>
+        /// The sample volumes to offer after a sample type is selected. A
+        /// sample type from a HIM assay row can constrain the volume to the
+        /// value in "Sample types and input volume"; otherwise the test-level
+        /// volume list or global catalog applies.
+        /// </summary>
+        public static IReadOnlyList<SampleVolume> VolumesFor(
+            TestType? test,
+            SampleType? sampleType,
+            IReadOnlyList<SampleVolume> catalogVolumes)
+        {
             ArgumentNullException.ThrowIfNull(catalogVolumes);
+
+            if (sampleType is not null && sampleType.AllowedVolumes.Count > 0)
+            {
+                return sampleType.AllowedVolumes;
+            }
 
             if (test is not null && test.AllowedVolumes.Count > 0)
             {
@@ -41,6 +60,24 @@ namespace RocheLIT.Services
             }
 
             return catalogVolumes;
+        }
+
+        /// <summary>
+        /// The sample types to offer for the selected test. Manual-derived
+        /// tests carry the assay-specific sample type list; older/custom
+        /// settings fall back to the global catalog.
+        /// </summary>
+        public static IReadOnlyList<SampleType> SampleTypesFor(
+            TestType? test, IReadOnlyList<SampleType> catalogSampleTypes)
+        {
+            ArgumentNullException.ThrowIfNull(catalogSampleTypes);
+
+            if (test is not null && test.AllowedSampleTypes.Count > 0)
+            {
+                return test.AllowedSampleTypes;
+            }
+
+            return catalogSampleTypes;
         }
 
         /// <summary>

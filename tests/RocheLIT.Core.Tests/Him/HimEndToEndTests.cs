@@ -66,6 +66,15 @@ public class HimEndToEndTests
         Assert.Contains(ctng.Targets, t => t.ObservationIdentifier == "CT^CT^99ROC");
         Assert.Contains(ctng.Targets, t => t.ObservationIdentifier == "NG^NG^99ROC");
         Assert.Contains(ctng.AllowedVolumes, v => v.Volume == "850 uL");
+        Assert.Contains(ctng.AllowedSampleTypes, s => s.Hl7Code == "UR");
+        Assert.Contains(ctng.AllowedSampleTypes, s => s.Hl7Code == "SWAB");
+        Assert.DoesNotContain(ctng.AllowedSampleTypes, s => s.Hl7Code == "PLAS");
+
+        var malaria = Assert.Single(testTypes, t =>
+            t.UniversalServiceIdentifier == "50687-3^Malaria^LN");
+        var malariaSample = Assert.Single(malaria.AllowedSampleTypes);
+        Assert.Equal("BLD", malariaSample.Hl7Code);
+        Assert.Equal("500 uL", Assert.Single(malariaSample.AllowedVolumes).Volume);
     }
 
     [Fact]

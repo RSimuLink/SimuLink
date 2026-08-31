@@ -18,5 +18,11 @@ namespace RocheLIT.Models
         /// Sample volumes allowed for this test. Empty means all configured volumes apply.
         /// </summary>
         public List<SampleVolume> AllowedVolumes { get; set; } = new();
+
+        /// <summary>
+        /// Sample types allowed for this test/assay. Empty means all configured
+        /// sample types apply.
+        /// </summary>
+        public List<SampleType> AllowedSampleTypes { get; set; } = new();
     }
 }

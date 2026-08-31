@@ -15,6 +15,9 @@ namespace RocheLIT.Models.Him
 
         /// <summary>TCD-9-1 input volume in microliters (e.g. "850").</summary>
         public string VolumeMicroliters { get; set; } = string.Empty;
+
+        /// <summary>All TCD-9-1 input volume options in microliters.</summary>
+        public List<string> VolumeOptionsMicroliters { get; set; } = new();
     }
 
     /// <summary>

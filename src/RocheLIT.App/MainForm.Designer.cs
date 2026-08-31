@@ -229,6 +229,7 @@ partial class MainForm
         cmbSampleType.Size = new Size(300, 27);
         cmbSampleType.DropDownStyle = ComboBoxStyle.DropDownList;
         cmbSampleType.Name = "cmbSampleType";
+        cmbSampleType.SelectedIndexChanged += cmbSampleType_SelectedIndexChanged;
 
         lblSampleVolume.AutoSize = true;
         lblSampleVolume.Location = new Point(16, 180);

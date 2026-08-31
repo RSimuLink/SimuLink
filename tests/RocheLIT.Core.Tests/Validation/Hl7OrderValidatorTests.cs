@@ -41,6 +41,32 @@ public class Hl7OrderValidatorTests
     }
 
     [Fact]
+    public void Validate_FlagsMissingMshSeparatorAfterEncodingCharacters()
+    {
+        var invalidOrder = ValidOrder.Replace("MSH|^~\\&|LIS", "MSH|^~\\&LIS", StringComparison.Ordinal);
+
+        var issues = Hl7OrderValidator.Validate(Hl7Parser.Parse(invalidOrder));
+
+        Assert.Contains(issues, issue =>
+            issue.SegmentName == "MSH" &&
+            issue.FieldPosition == 3 &&
+            issue.Message.Contains("missing field separator after MSH-2"));
+    }
+
+    [Fact]
+    public void Validate_FlagsInvalidMshEncodingCharacters()
+    {
+        var invalidOrder = ValidOrder.Replace("MSH|^~\\&|LIS", "MSH|^~\\%|LIS", StringComparison.Ordinal);
+
+        var issues = Hl7OrderValidator.Validate(Hl7Parser.Parse(invalidOrder));
+
+        Assert.Contains(issues, issue =>
+            issue.SegmentName == "MSH" &&
+            issue.FieldPosition == 2 &&
+            issue.Message.Contains("ASCII 094, 126, 092, 038"));
+    }
+
+    [Fact]
     public void Validate_FlagsMissingRequiredSegment()
     {
         var invalidOrder = ValidOrder.Replace(
