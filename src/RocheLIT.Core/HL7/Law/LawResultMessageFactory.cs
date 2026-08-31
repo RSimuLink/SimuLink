@@ -29,7 +29,8 @@ namespace RocheLIT.HL7.Law
             string rackId = "",
             string carrierPosition = "",
             bool includeInventory = false,
-            bool includeCtValues = false)
+            bool includeCtValues = false,
+            IReadOnlyDictionary<string, string>? targetResults = null)
         {
             ArgumentNullException.ThrowIfNull(sampleType);
             ArgumentNullException.ThrowIfNull(test);
@@ -47,9 +48,11 @@ namespace RocheLIT.HL7.Law
             foreach (var target in test.Targets)
             {
                 var isSelected = ReferenceEquals(target, selectedTarget);
-                var rawValue = isSelected
-                    ? value
-                    : target.ObservationValues.FirstOrDefault() ?? string.Empty;
+                var rawValue = TryGetTargetResult(targetResults, target, out var targetValue)
+                    ? targetValue
+                    : isSelected
+                        ? value
+                        : target.ObservationValues.FirstOrDefault() ?? string.Empty;
                 var result = ResolveTargetResult(target, rawValue, isSelected ? flag : ResultFlag.Normal);
 
                 observations.Add(new ChannelResult
@@ -168,6 +171,34 @@ namespace RocheLIT.HL7.Law
             }
 
             return -1;
+        }
+
+        private static bool TryGetTargetResult(
+            IReadOnlyDictionary<string, string>? targetResults,
+            Target target,
+            out string value)
+        {
+            value = string.Empty;
+            if (targetResults is null || targetResults.Count == 0)
+            {
+                return false;
+            }
+
+            if (targetResults.TryGetValue(target.ObservationIdentifier, out var exactValue) ||
+                targetResults.TryGetValue(target.Name, out exactValue))
+            {
+                value = exactValue ?? string.Empty;
+                return true;
+            }
+
+            var identifier = CodedElement.Parse(target.ObservationIdentifier).Identifier;
+            if (identifier.Length > 0 && targetResults.TryGetValue(identifier, out var identifierValue))
+            {
+                value = identifierValue ?? string.Empty;
+                return true;
+            }
+
+            return false;
         }
 
         private sealed record ResolvedResult(string Value, CodedElement Interpretation);

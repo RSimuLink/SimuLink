@@ -33,6 +33,23 @@ public class ResultEntryPresenterTests
     }
 
     [Fact]
+    public void ResultValuesFor_PrefersHumanReadableInterpretationsWhenMapped()
+    {
+        var test = TestWith("RR", "NR");
+        test.Targets[0].InterpretationCodes.AddRange(new[] { "Reactive", "Non-Reactive" });
+
+        Assert.Equal(new[] { "Reactive", "Non-Reactive" }, ResultEntryPresenter.ResultValuesFor(test));
+    }
+
+    [Fact]
+    public void SampleType_ToString_ReturnsDisplayName()
+    {
+        var sampleType = new SampleType { DisplayName = "Cadaveric Plasma" };
+
+        Assert.Equal("Cadaveric Plasma", sampleType.ToString());
+    }
+
+    [Fact]
     public void ResultValuesFor_NullTest_IsEmpty()
     {
         Assert.Empty(ResultEntryPresenter.ResultValuesFor(null));

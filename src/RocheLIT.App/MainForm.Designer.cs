@@ -39,6 +39,9 @@ partial class MainForm
         cmbTestType = new ComboBox();
         lblResult = new Label();
         cmbResult = new ComboBox();
+        gridTargetResults = new DataGridView();
+        colTargetName = new DataGridViewTextBoxColumn();
+        colTargetResult = new DataGridViewComboBoxColumn();
         lblSampleType = new Label();
         cmbSampleType = new ComboBox();
         lblSampleVolume = new Label();
@@ -76,6 +79,7 @@ partial class MainForm
 
         pnlToolbar.SuspendLayout();
         grpSend.SuspendLayout();
+        ((System.ComponentModel.ISupportInitialize)gridTargetResults).BeginInit();
         grpReceived.SuspendLayout();
         ((System.ComponentModel.ISupportInitialize)gridOrders).BeginInit();
         grpLog.SuspendLayout();
@@ -183,6 +187,7 @@ partial class MainForm
         grpSend.Controls.Add(cmbTestType);
         grpSend.Controls.Add(lblResult);
         grpSend.Controls.Add(cmbResult);
+        grpSend.Controls.Add(gridTargetResults);
         grpSend.Controls.Add(lblSampleType);
         grpSend.Controls.Add(cmbSampleType);
         grpSend.Controls.Add(lblSampleVolume);
@@ -195,7 +200,7 @@ partial class MainForm
         grpSend.Controls.Add(chkCtValues);
         grpSend.Controls.Add(btnSendResult);
         grpSend.Location = new Point(12, 92);
-        grpSend.Size = new Size(480, 420);
+        grpSend.Size = new Size(480, 470);
         grpSend.Name = "grpSend";
         grpSend.Text = "Send Test Results to LIS";
 
@@ -220,7 +225,24 @@ partial class MainForm
         lblResult.Text = "Result:";
         cmbResult.Location = new Point(150, 105);
         cmbResult.Size = new Size(300, 27);
+        cmbResult.DropDownStyle = ComboBoxStyle.DropDownList;
         cmbResult.Name = "cmbResult";
+
+        gridTargetResults.Columns.AddRange(new DataGridViewColumn[] { colTargetName, colTargetResult });
+        gridTargetResults.Location = new Point(150, 105);
+        gridTargetResults.Size = new Size(300, 96);
+        gridTargetResults.AllowUserToAddRows = false;
+        gridTargetResults.AllowUserToDeleteRows = false;
+        gridTargetResults.RowHeadersVisible = false;
+        gridTargetResults.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
+        gridTargetResults.EditMode = DataGridViewEditMode.EditOnEnter;
+        gridTargetResults.Name = "gridTargetResults";
+        gridTargetResults.Visible = false;
+        colTargetName.HeaderText = "Target";
+        colTargetName.Name = "colTargetName";
+        colTargetName.ReadOnly = true;
+        colTargetResult.HeaderText = "Result";
+        colTargetResult.Name = "colTargetResult";
 
         lblSampleType.AutoSize = true;
         lblSampleType.Location = new Point(16, 144);
@@ -367,7 +389,7 @@ partial class MainForm
         // grpLog
         //
         grpLog.Controls.Add(lstLog);
-        grpLog.Location = new Point(12, 524);
+        grpLog.Location = new Point(12, 574);
         grpLog.Size = new Size(1052, 120);
         grpLog.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
         grpLog.Name = "grpLog";
@@ -393,7 +415,7 @@ partial class MainForm
         // Added last so it docks above the toolbar; set as the form's menu.
         Controls.Add(menuStrip);
         MainMenuStrip = menuStrip;
-        MinimumSize = new Size(1092, 695);
+        MinimumSize = new Size(1092, 745);
         Name = "MainForm";
         StartPosition = FormStartPosition.CenterScreen;
         Text = "Roche LIT - Laboratory Interfacing Tool";
@@ -405,6 +427,7 @@ partial class MainForm
         grpReceived.ResumeLayout(false);
         grpReceived.PerformLayout();
         ((System.ComponentModel.ISupportInitialize)gridOrders).EndInit();
+        ((System.ComponentModel.ISupportInitialize)gridTargetResults).EndInit();
         grpLog.ResumeLayout(false);
         ResumeLayout(false);
     }
@@ -430,6 +453,9 @@ partial class MainForm
     private ComboBox cmbTestType;
     private Label lblResult;
     private ComboBox cmbResult;
+    private DataGridView gridTargetResults;
+    private DataGridViewTextBoxColumn colTargetName;
+    private DataGridViewComboBoxColumn colTargetResult;
     private Label lblSampleType;
     private ComboBox cmbSampleType;
     private Label lblSampleVolume;

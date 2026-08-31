@@ -22,5 +22,7 @@ namespace RocheLIT.Models
         /// Empty means the selected test's volume list or global catalog applies.
         /// </summary>
         public List<SampleVolume> AllowedVolumes { get; set; } = new();
+
+        public override string ToString() => DisplayName;
     }
 }

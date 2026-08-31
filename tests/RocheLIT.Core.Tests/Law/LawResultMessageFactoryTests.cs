@@ -60,6 +60,27 @@ public class LawResultMessageFactoryTests
         },
     };
 
+    private static TestType MpxeTest() => new()
+    {
+        Name = "MPX-E",
+        UniversalServiceIdentifier = "74856-6^MPX^LN",
+        Targets =
+        {
+            MpxeTarget("HBV", "HBV^HBV^99ROC"),
+            MpxeTarget("HIV", "HIV^HIV^99ROC"),
+            MpxeTarget("HEV", "HEV^HEV^99ROC"),
+            MpxeTarget("HCV", "HCV^HCV^99ROC"),
+        },
+    };
+
+    private static Target MpxeTarget(string name, string observationIdentifier) => new()
+    {
+        Name = name,
+        ObservationIdentifier = observationIdentifier,
+        ObservationValues = { "RR", "NR" },
+        InterpretationCodes = { "Reactive", "Non-Reactive" },
+    };
+
     [Fact]
     public void Create_MapsSpecimenAndTestCode()
     {
@@ -111,6 +132,35 @@ public class LawResultMessageFactoryTests
         // Non-selected target falls back to its first configured value, normal flag.
         Assert.Equal("Negative", other.Value);
         Assert.Equal("N", other.Interpretation!.Identifier);
+    }
+
+    [Fact]
+    public void Create_AppliesPerTargetResultsForMultiTargetAssay()
+    {
+        var test = MpxeTest();
+        var msg = LawResultMessageFactory.Create(
+            "SID42",
+            Plasma,
+            test,
+            test.Targets[0],
+            "Reactive",
+            ResultFlag.Normal,
+            Settings,
+            When,
+            targetResults: new Dictionary<string, string>
+            {
+                ["HBV^HBV^99ROC"] = "Reactive",
+                ["HIV^HIV^99ROC"] = "Non-Reactive",
+                ["HEV^HEV^99ROC"] = "Reactive",
+                ["HCV^HCV^99ROC"] = "Non-Reactive",
+            });
+
+        var observations = msg.Tests[0].Observations;
+
+        Assert.Equal(new[] { "Reactive", "Non-Reactive", "Reactive", "Non-Reactive" },
+            observations.Select(o => o.Value));
+        Assert.Equal(new[] { "RR", "NR", "RR", "NR" },
+            observations.Select(o => o.Interpretation!.Identifier));
     }
 
     [Fact]

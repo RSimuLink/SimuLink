@@ -127,6 +127,19 @@ public class HimParserTests
     }
 
     [Fact]
+    public void ParsesMpxeReactiveNonReactiveTargets()
+    {
+        var mpxe = Assay("MPX-E");
+
+        Assert.Equal(new[] { "HBV", "HIV", "HEV", "HCV" }, mpxe.Targets.Select(t => t.Name));
+        Assert.All(mpxe.Targets, target =>
+        {
+            Assert.Equal(new[] { "RR", "NR" }, target.ObservationValues);
+            Assert.Equal(new[] { "Reactive", "Non-Reactive" }, target.InterpretationCodes);
+        });
+    }
+
+    [Fact]
     public void EveryParsedTargetHasMatchingValueAndInterpretationCounts()
     {
         foreach (var target in Manual().Assays.SelectMany(a => a.Targets))

@@ -22,7 +22,24 @@ namespace RocheLIT.Services
                 return Array.Empty<string>();
             }
 
-            return test.Targets[0].ObservationValues;
+            return ResultValuesForTarget(test.Targets[0]);
+        }
+
+        /// <summary>The display values to offer for a single target.</summary>
+        public static IReadOnlyList<string> ResultValuesForTarget(Target? target)
+        {
+            if (target is null)
+            {
+                return Array.Empty<string>();
+            }
+
+            if (target.InterpretationCodes.Count == target.ObservationValues.Count &&
+                target.InterpretationCodes.Count > 0)
+            {
+                return target.InterpretationCodes;
+            }
+
+            return target.ObservationValues;
         }
 
         /// <summary>
@@ -93,7 +110,7 @@ namespace RocheLIT.Services
             }
 
             var fallback = test is { Targets.Count: > 0 }
-                ? test.Targets[0].ObservationValues.FirstOrDefault()
+                ? ResultValuesForTarget(test.Targets[0]).FirstOrDefault()
                 : null;
 
             return fallback ?? "N/A";

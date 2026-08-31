@@ -104,8 +104,10 @@ public partial class MainForm : Form
         var test = cmbTestType.SelectedItem as TestType;
         var sampleTypes = ResultEntryPresenter.SampleTypesFor(test, _settings.SampleTypes).ToList();
         var resultValues = ResultEntryPresenter.ResultValuesFor(test).ToList();
+        var usesTargetGrid = test is { Targets.Count: > 1 };
 
         _isBindingCatalog = true;
+        ApplyResultLayout(usesTargetGrid);
 
         cmbSampleType.DataSource = null;
         cmbSampleType.DataSource = sampleTypes;
@@ -115,14 +117,20 @@ public partial class MainForm : Form
         }
 
         cmbResult.DataSource = null;
-        cmbResult.DataSource = resultValues;
+        if (!usesTargetGrid)
+        {
+            cmbResult.DataSource = resultValues;
+        }
+
+        PopulateTargetResultGrid(test);
 
         cmbSampleVolume.DataSource = null;
 
         _isBindingCatalog = false;
 
         cmbSampleType.Enabled = test is not null && sampleTypes.Count > 0;
-        cmbResult.Enabled = test is not null && resultValues.Count > 0;
+        cmbResult.Enabled = !usesTargetGrid && test is not null && resultValues.Count > 0;
+        gridTargetResults.Enabled = usesTargetGrid && gridTargetResults.Rows.Count > 0;
         cmbSampleVolume.Enabled = false;
     }
 
@@ -141,6 +149,82 @@ public partial class MainForm : Form
 
         cmbSampleVolume.Enabled = sampleType is not null && volumes.Count > 0;
     }
+
+    private void PopulateTargetResultGrid(TestType? test)
+    {
+        gridTargetResults.Rows.Clear();
+        if (test is not { Targets.Count: > 1 })
+        {
+            return;
+        }
+
+        foreach (var target in test.Targets)
+        {
+            var values = ResultEntryPresenter.ResultValuesForTarget(target).ToList();
+            if (values.Count == 0)
+            {
+                continue;
+            }
+
+            var rowIndex = gridTargetResults.Rows.Add();
+            var row = gridTargetResults.Rows[rowIndex];
+            row.Tag = target;
+            row.Cells[0].Value = target.Name;
+            row.Cells[1] = new DataGridViewComboBoxCell
+            {
+                DataSource = values,
+                Value = values[0],
+            };
+        }
+    }
+
+    private IReadOnlyDictionary<string, string> TargetResultsFor(TestType test)
+    {
+        var results = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+        if (test.Targets.Count <= 1)
+        {
+            return results;
+        }
+
+        foreach (DataGridViewRow row in gridTargetResults.Rows)
+        {
+            if (row.Tag is not Target target)
+            {
+                continue;
+            }
+
+            var value = row.Cells[1].Value?.ToString() ?? string.Empty;
+            if (value.Length > 0)
+            {
+                results[target.ObservationIdentifier] = value;
+            }
+        }
+
+        return results;
+    }
+
+    private void ApplyResultLayout(bool usesTargetGrid)
+    {
+        var offset = usesTargetGrid ? 72 : 0;
+        lblResult.Text = usesTargetGrid ? "Results:" : "Result:";
+        cmbResult.Visible = !usesTargetGrid;
+        gridTargetResults.Visible = usesTargetGrid;
+
+        MoveToY(lblSampleType, 144 + offset);
+        MoveToY(cmbSampleType, 141 + offset);
+        MoveToY(lblSampleVolume, 180 + offset);
+        MoveToY(cmbSampleVolume, 177 + offset);
+        MoveToY(lblRackId, 216 + offset);
+        MoveToY(txtRackId, 213 + offset);
+        MoveToY(lblCarrierPosition, 252 + offset);
+        MoveToY(txtCarrierPosition, 249 + offset);
+        MoveToY(chkInventory, 288 + offset);
+        MoveToY(chkCtValues, 288 + offset);
+        MoveToY(btnSendResult, 330 + offset);
+    }
+
+    private static void MoveToY(Control control, int y) =>
+        control.Location = new Point(control.Location.X, y);
 
     // --- Connection ---------------------------------------------------------
 
@@ -225,6 +309,14 @@ public partial class MainForm : Form
 
         var sampleId = txtSampleId.Text.Trim();
         var target = test!.Targets[0];
+        var targetResults = TargetResultsFor(test);
+        if (test.Targets.Count > 1 && targetResults.Count != test.Targets.Count)
+        {
+            MessageBox.Show("Please select a result for each target.", "Missing data",
+                MessageBoxButtons.OK, MessageBoxIcon.Information);
+            return;
+        }
+
         var value = ResultEntryPresenter.EffectiveResultValue(
             test, cmbResult.SelectedItem?.ToString());
 
@@ -240,7 +332,8 @@ public partial class MainForm : Form
             rackId: txtRackId.Text,
             carrierPosition: txtCarrierPosition.Text,
             includeInventory: chkInventory.Checked,
-            includeCtValues: chkCtValues.Checked);
+            includeCtValues: chkCtValues.Checked,
+            targetResults: targetResults);
         ApplyReceivedOrderContext(resultMessage, sampleId);
         var message = LawOulR22Builder.Build(resultMessage);
 

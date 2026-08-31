@@ -352,6 +352,12 @@ namespace RocheLIT.Him
         private static void ApplyResultCodes(AssayDefinition assay, string block)
         {
             var codes = ParseResultCodes(block);
+            if (codes.Count == 0 && UsesReactiveNonReactiveFallback(assay))
+            {
+                codes.Add("RR");
+                codes.Add("NR");
+            }
+
             if (codes.Count == 0)
             {
                 return;
@@ -405,6 +411,11 @@ namespace RocheLIT.Him
 
             return codes;
         }
+
+        private static bool UsesReactiveNonReactiveFallback(AssayDefinition assay) =>
+            assay.Description.Contains("qualitative", StringComparison.OrdinalIgnoreCase) &&
+            assay.Description.Contains("multi-channel", StringComparison.OrdinalIgnoreCase) &&
+            assay.Description.Contains("blood screening", StringComparison.OrdinalIgnoreCase);
 
         // --- Helpers --------------------------------------------------------
 

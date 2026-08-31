@@ -16,5 +16,7 @@ namespace RocheLIT.Models
 
         /// <summary>Candidate interpretation codes used to populate OBX-8 (e.g. N, H, L, A).</summary>
         public List<string> InterpretationCodes { get; set; } = new();
+
+        public override string ToString() => Name;
     }
 }
