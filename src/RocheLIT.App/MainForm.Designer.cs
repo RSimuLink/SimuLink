@@ -21,6 +21,7 @@ partial class MainForm
         menuStrip = new MenuStrip();
         toolsMenu = new ToolStripMenuItem();
         exampleGeneratorMenuItem = new ToolStripMenuItem();
+        ucapMenuItem = new ToolStripMenuItem();
         aboutMenuItem = new ToolStripMenuItem();
 
         // Toolbar
@@ -87,7 +88,7 @@ partial class MainForm
         //
         // menuStrip
         //
-        menuStrip.Items.AddRange(new ToolStripItem[] { toolsMenu, aboutMenuItem });
+        menuStrip.Items.AddRange(new ToolStripItem[] { toolsMenu, ucapMenuItem, aboutMenuItem });
         menuStrip.Location = new Point(0, 0);
         menuStrip.Name = "menuStrip";
         //
@@ -102,6 +103,12 @@ partial class MainForm
         exampleGeneratorMenuItem.Text = "&Example Generator...";
         exampleGeneratorMenuItem.Name = "exampleGeneratorMenuItem";
         exampleGeneratorMenuItem.Click += exampleGeneratorMenuItem_Click;
+        //
+        // ucapMenuItem
+        //
+        ucapMenuItem.Text = "&UCAP";
+        ucapMenuItem.Name = "ucapMenuItem";
+        ucapMenuItem.Click += ucapMenuItem_Click;
         //
         // aboutMenuItem
         //
@@ -285,7 +292,7 @@ partial class MainForm
         chkCtValues.AutoSize = true;
         chkCtValues.Location = new Point(258, 288);
         chkCtValues.Name = "chkCtValues";
-        chkCtValues.Text = "ct values";
+        chkCtValues.Text = "Ct values";
 
         chkControlResult.AutoSize = true;
         chkControlResult.Location = new Point(342, 288);
@@ -439,6 +446,7 @@ partial class MainForm
     private MenuStrip menuStrip;
     private ToolStripMenuItem toolsMenu;
     private ToolStripMenuItem exampleGeneratorMenuItem;
+    private ToolStripMenuItem ucapMenuItem;
     private ToolStripMenuItem aboutMenuItem;
 
     private Panel pnlToolbar;

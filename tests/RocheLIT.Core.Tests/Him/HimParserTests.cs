@@ -182,6 +182,90 @@ public class HimParserTests
     }
 
     [Fact]
+    public void ParsesPreviouslyMissingAssayMappings()
+    {
+        var hbvRuo = Assay("HBV-RNA-RUO");
+        Assert.Contains(hbvRuo.Tests, t => t.UniversalServiceIdentifier == "HBVRNA^RUO^99ROC");
+
+        var hdvRuo = Assay("HDV-RUO");
+        Assert.Contains(hdvRuo.Tests, t => t.UniversalServiceIdentifier == "HDV^RUO^99ROC");
+
+        var resp4Flex = Assay("RESP-4FLEX");
+        Assert.Equal(4, resp4Flex.Tests.Count);
+        Assert.Contains(resp4Flex.Tests, t => t.UniversalServiceIdentifier == "94309-2^SCoV2^LN");
+
+        var respFlex = Assay("RESP-FLEX");
+        Assert.Equal(12, respFlex.Tests.Count);
+        Assert.Contains(respFlex.Targets, t => t.ObservationIdentifier == "hPIV4^hPIV4^99ROC");
+
+        var sarsDuo = Assay("SARS-CoV-2 Duo");
+        Assert.Contains(sarsDuo.Tests, t => t.UniversalServiceIdentifier == "97104-4^SARS-COV-2^LN");
+
+        var scov2Fluab = Assay("SCoV2-FluA/B");
+        Assert.Contains(scov2Fluab.Tests, t => t.UniversalServiceIdentifier == "95380-2^SCoVFlu^LN");
+
+        var bvcv = Assay("BV/CV");
+        Assert.Contains(bvcv.Tests, t => t.UniversalServiceIdentifier == "92703-8^BV/CV^LN");
+    }
+
+    [Fact]
+    public void CleansReportedControlResultNames()
+    {
+        Assert.Equal(new[] { "DPX D (+) C", "DPX H (+) C", "(-) C" },
+            Assay("DPX").ControlResults.Select(c => c.Name));
+
+        Assert.Equal(new[] { "HIV-1M/HIV-2 (+) C", "HIV-1O (+) C", "(-) C" },
+            Assay("HIV-1/2-Qual-DBS").ControlResults.Select(c => c.Name));
+        Assert.Equal(new[] { "HIV-1M/HIV-2 (+) C", "HIV-1O (+) C", "(-) C" },
+            Assay("HIV-1/2-Qual-Ser/Pla").ControlResults.Select(c => c.Name));
+
+        Assert.Equal(new[] { "SARS-CoV-2 H (+) C", "SARS-CoV-2 L (+) C", "(-) Ctrl" },
+            Assay("SARS-CoV-2 Duo").ControlResults.Select(c => c.Name));
+        Assert.Equal(new[] { "SCoV2-FluA/B (+) C", "(-) Ctrl" },
+            Assay("SCoV2-FluA/B").ControlResults.Select(c => c.Name));
+    }
+
+    [Fact]
+    public void AppliesReportedAssaySpecificCatalogCorrections()
+    {
+        var hivSerPla = Assay("HIV-1/2-Qual-Ser/Pla");
+        Assert.Contains(hivSerPla.Tests, t => t.Name == "HIV-1/2-Qual-Ser/Pla");
+
+        var hivPsc = Assay("HIV-PSC");
+        var psc = Assert.Single(hivPsc.SampleTypes);
+        Assert.Equal("PSC", psc.Name);
+        Assert.Equal("PSEPC^Plasma Separation Card^99ROC", psc.SpecimenType);
+
+        var scov2Fluab = Assay("SCoV2-FluA/B");
+        Assert.Equal(
+            new[] { "VIRAL TRANSPORT MEDIA", "COBAS PCR MEDIA SWAB" },
+            scov2Fluab.SampleTypes.Select(s => s.Name));
+        Assert.All(scov2Fluab.SampleTypes, s =>
+            Assert.Equal(new[] { "400" }, s.VolumeOptionsMicroliters));
+        Assert.Equal(
+            new[] { "FluA^FluA^99ROC", "SCoV2^SCoV2^99ROC", "PanSarb^PanSarb^99ROC", "FluB^FluB^99ROC" },
+            scov2Fluab.Targets.Select(t => t.ObservationIdentifier));
+
+        var hpvGt = Assay("HPV-GT");
+        Assert.Contains(hpvGt.SampleTypes, s => s.Name == "Self, vaginal (for US only)" &&
+            s.SpecimenType == "SVAL^self, vaginal^99ROC");
+        Assert.Contains(hpvGt.SampleTypes, s => s.Name == "SUREPATH" &&
+            s.SpecimenType == "SPATH^SurePath^99ROC");
+        Assert.Contains(hpvGt.SampleTypes, s => s.Name == "Self, vaginal - RCCM/PC" &&
+            s.SpecimenType == "SVAG^self, vaginal - RCCM/PC^99ROC");
+        Assert.Contains(hpvGt.Targets, t =>
+            t.ObservationIdentifier == "Other HR HPV^Other HR HPV^99ROC");
+
+        var hpvHr = Assay("HPV-HR");
+        Assert.Contains(hpvHr.SampleTypes, s => s.Name == "Self, vaginal (for US only)" &&
+            s.SpecimenType == "SVAL^self, vaginal^99ROC");
+        Assert.Contains(hpvHr.SampleTypes, s => s.Name == "SUREPATH" &&
+            s.SpecimenType == "SPATH^SurePath^99ROC");
+        Assert.Contains(hpvHr.Targets, t =>
+            t.ObservationIdentifier == "HR HPV^HR HPV^99ROC");
+    }
+
+    [Fact]
     public void ParsesControlResultsForMalariaAndHiv()
     {
         var malaria = Assay("Malaria");

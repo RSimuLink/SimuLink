@@ -15,6 +15,7 @@ public partial class MainForm : Form
     private readonly ActivityLog _log = new();
     private LisConnectionService? _connection;
     private ReceivedOrder? _lastReceivedOrder;
+    private UcapForm? _ucapForm;
     private bool _isBindingCatalog;
     private readonly Dictionary<string, string> _targetResults = new(StringComparer.OrdinalIgnoreCase);
 
@@ -277,6 +278,7 @@ public partial class MainForm : Form
         btnConnect.Enabled = state == ConnectionState.Disconnected;
         btnDisconnect.Enabled = connected;
         btnSendResult.Enabled = connected;
+        _ucapForm?.SetConnectionState(state);
     }
 
     private void btnSettings_Click(object? sender, EventArgs e)
@@ -408,6 +410,33 @@ public partial class MainForm : Form
         dialog.ShowDialog(this);
     }
 
+    private void ucapMenuItem_Click(object? sender, EventArgs e)
+    {
+        if (_ucapForm is null || _ucapForm.IsDisposed)
+        {
+            _ucapForm = new UcapForm(
+                _settings.Connection,
+                () => _connection?.State ?? ConnectionState.Disconnected,
+                SendRawResultAsync,
+                _log,
+                _lastReceivedOrder);
+            _ucapForm.FormClosed += (_, _) => _ucapForm = null;
+        }
+
+        _ucapForm.Show(this);
+        _ucapForm.BringToFront();
+    }
+
+    private Task<string> SendRawResultAsync(string rawMessage)
+    {
+        if (_connection is null)
+        {
+            throw new InvalidOperationException("Not connected to a LIS.");
+        }
+
+        return _connection.SendResultAsync(rawMessage);
+    }
+
     private void aboutMenuItem_Click(object? sender, EventArgs e)
     {
         MessageBox.Show(this,
@@ -471,6 +500,7 @@ public partial class MainForm : Form
         txtReceivedSampleVolume.Text = order.SampleVolume;
         txtReceivedRackId.Text = order.CarrierId;
         txtReceivedCarrierPosition.Text = order.CarrierPosition;
+        _ucapForm?.ShowOrder(order);
 
         gridOrders.Rows.Clear();
         foreach (var test in order.Tests)

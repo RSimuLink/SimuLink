@@ -3,6 +3,10 @@
 This document shows how LIT reads the Host Interface Manual PDF and turns it
 into the assay/test catalog used by the application.
 
+## Visual Overview
+
+![LIT Host Interface Manual parser flow](host-interface-manual-parser-flow.svg)
+
 ## High-Level Flow
 
 ```mermaid

@@ -15,9 +15,9 @@
     <Description>Laboratory Interfacing Tool</Description>
     <Company>Roche Diagnostics International</Company>
     <ApplicationIcon>Assets\LITAppIcon.ico</ApplicationIcon>
-    <Version>1.0.26</Version>
-    <AssemblyVersion>1.0.26.0</AssemblyVersion>
-    <FileVersion>1.0.26.0</FileVersion>
+    <Version>1.0.27</Version>
+    <AssemblyVersion>1.0.27.0</AssemblyVersion>
+    <FileVersion>1.0.27.0</FileVersion>
   </PropertyGroup>
 
   <ItemGroup>

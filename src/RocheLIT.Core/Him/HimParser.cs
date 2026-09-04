@@ -18,22 +18,23 @@ namespace RocheLIT.Him
     {
         // id^text^system. Identifier and system are token-like; text allows
         // spaces and slashes (e.g. "CT/NG", "Real Time").
-        [GeneratedRegex(@"([A-Za-z0-9\-]+)\^([A-Za-z0-9 /+.{}*]+?)\^(HL7\d+|99ROC|LN|LOINC|UCUM)")]
+        [GeneratedRegex(@"([A-Za-z0-9\- ]+)\^([A-Za-z0-9 /+.{}*,\-]+?)\^(HL7\d+|99ROC|LN|LOINC|UCUM)")]
         private static partial Regex CodedElementRegex();
 
         // A sample-type row: <coded specimen> followed by its consumption
         // volume. The volume is the first integer after the code; trailing
         // alternates/footnotes (e.g. "850 / 150", a glued neighbour cell) are
         // ignored so each row yields one clean numeric volume.
-        [GeneratedRegex(@"([A-Za-z0-9\-]+\^[A-Za-z0-9 /+.{}*]+?\^(?:HL7\d+|99ROC))\s*(\d+)")]
+        [GeneratedRegex(@"([A-Za-z0-9\-]+\^[A-Za-z0-9 /+.{}*,\-]+?\^(?:HL7\d+|99ROC))\s*(\d+)")]
         private static partial Regex SampleTypeRowRegex();
 
-        // A LOINC test code: ddddd-d^name^LN (name may contain hyphens, e.g. CHIKV-DENV).
-        [GeneratedRegex(@"(\d{3,6}-\d)\^([A-Za-z0-9 /+.\-]+?)\^LN")]
-        private static partial Regex LoincRegex();
+        // A service/test code from the Tests table: usually LOINC, but RUO
+        // assays use 99ROC service identifiers.
+        [GeneratedRegex(@"([A-Za-z0-9\-]+)\^([A-Za-z0-9 /+.\-]+?)\^(LN|99ROC)")]
+        private static partial Regex ServiceIdentifierRegex();
 
         // A vendor target code: id^name^99ROC.
-        [GeneratedRegex(@"([A-Za-z0-9\-]+)\^([A-Za-z0-9 /+.]+?)\^99ROC")]
+        [GeneratedRegex(@"([A-Za-z0-9\-]+)\^([A-Za-z0-9 /+.\-]+?)\^99ROC")]
         private static partial Regex VendorCodeRegex();
 
         // A standalone OBX-5 result-code token from the assay's result-code
@@ -45,7 +46,7 @@ namespace RocheLIT.Him
         // Control names in the assay-specific "Control results" table. The
         // PDF extraction can glue words together, so cleanup is applied after
         // matching.
-        [GeneratedRegex(@"([A-Za-z0-9][A-Za-z0-9/+\-. ]*?)?\s*\([+-]\)\s*(?:C|Ctrl)")]
+        [GeneratedRegex(@"([A-Za-z0-9][A-Za-z0-9/+.\-^ ]*?)?\s*\([+-]\)\s*(?:C|Ctrl)")]
         private static partial Regex ControlNameRegex();
 
         // Canonical OBX-8-1 interpretation text for each OBX-5 result code, used
@@ -213,9 +214,13 @@ namespace RocheLIT.Him
             var assays = new List<AssayDefinition>();
             var seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
-            foreach (var page in pages)
+            for (var pageIndex = 0; pageIndex < pages.Count; pageIndex++)
             {
-                foreach (var assay in ParseAssaysOnPage(page))
+                var page = pages[pageIndex];
+                var blockSource = pageIndex + 1 < pages.Count
+                    ? $"{page} {pages[pageIndex + 1]}"
+                    : page;
+                foreach (var assay in ParseAssaysOnPage(blockSource))
                 {
                     // The same assay heading can repeat (TOC, running headers);
                     // keep the first populated definition.
@@ -233,15 +238,17 @@ namespace RocheLIT.Him
 
         private static IEnumerable<AssayDefinition> ParseAssaysOnPage(string page)
         {
-            // Assay blocks are introduced by "<name> - LIS mapping" and contain
+            // Assay blocks are introduced by "<name> - LIS mapping" (or, for a
+            // small number of HIM tables, "<name> mapping") and contain
             // the sample/test/target/result sections. Require the description
             // sentence ("is a ... assay") so we skip TOC and cross-references.
-            var headingRegex = new Regex(@"([A-Za-z0-9/+\-]+) - LIS mapping");
+            var headingRegex = new Regex(
+                @"([A-Za-z0-9/+&.\- ]+?)\s+(?:-\s+LIS\s+mapping|mapping)\b");
             var matches = headingRegex.Matches(page);
 
             for (var i = 0; i < matches.Count; i++)
             {
-                var name = matches[i].Value.Replace(" - LIS mapping", string.Empty).Trim();
+                var name = CleanAssayName(matches[i].Groups[1].Value);
                 var start = matches[i].Index;
                 var end = i + 1 < matches.Count ? matches[i + 1].Index : page.Length;
                 var block = page[start..end];
@@ -251,8 +258,8 @@ namespace RocheLIT.Him
                 // targets table tag (filters out changelog / cross-reference
                 // blocks that mention an assay name but have no LIS mapping).
                 var descMatch = Regex.Match(
-                    block,
-                    name + Regex.Escape(" - LIS mapping") + @"\s*(.*?\bassay\b[^.]*\.)",
+                    block[matches[i].Length..],
+                    @"^\s*(.*?\bassays?\b[^.]*\.)",
                     RegexOptions.Singleline);
                 if (!descMatch.Success || !block.Contains("(OBX-3)", StringComparison.Ordinal))
                 {
@@ -313,14 +320,14 @@ namespace RocheLIT.Him
             }
 
             var lastEnd = 0;
-            foreach (Match m in LoincRegex().Matches(region))
+            foreach (Match m in ServiceIdentifierRegex().Matches(region))
             {
                 var name = region[lastEnd..m.Index].Trim();
                 result.Add(new AssayTest
                 {
                     Name = CleanName(name),
                     UniversalServiceIdentifier =
-                        $"{m.Groups[1].Value}^{m.Groups[2].Value.Trim()}^LN",
+                        $"{m.Groups[1].Value}^{m.Groups[2].Value.Trim()}^{m.Groups[3].Value}",
                 });
                 lastEnd = m.Index + m.Length;
             }
@@ -521,6 +528,7 @@ namespace RocheLIT.Him
 
                 EnsureControlFallbacks(assay, parsed);
                 assay.ControlResults = parsed;
+                ApplyAssayCorrections(assay);
             }
         }
 
@@ -600,12 +608,14 @@ namespace RocheLIT.Him
 
             var prefix = cleaned[..signIndex].Trim();
             var suffix = cleaned[signIndex..].Trim();
+            prefix = CodedElementRegex().Replace(prefix, " ");
+            prefix = Regex.Replace(prefix, @"\b\d{3,6}-\d\^[A-Za-z0-9/+.\-]+\s*", " ");
             while (true)
             {
                 var before = prefix;
                 prefix = Regex.Replace(
                     prefix,
-                    @"^(?:Titer\s+\(value\)|Not used|Error flag|Valid|All|y)\s+",
+                    @"^(?:Titer\s+\(value\)|Not used|Error flag|Valid|All|y|99ROC)\s+",
                     string.Empty,
                     RegexOptions.IgnoreCase).Trim();
                 prefix = Regex.Replace(
@@ -619,6 +629,9 @@ namespace RocheLIT.Him
                     break;
                 }
             }
+
+            prefix = Regex.Replace(prefix, @"^HIV-1-2-\s+(?=HIV-1O\b)", string.Empty);
+            prefix = Regex.Replace(prefix, @"^SARS-\s+(?=SARS-CoV-2\b)", string.Empty);
 
             if (suffix.StartsWith("(-)", StringComparison.Ordinal))
             {
@@ -658,6 +671,118 @@ namespace RocheLIT.Him
             return marker > 0 ? description[..marker].Trim() : assay.Name;
         }
 
+        private static void ApplyAssayCorrections(AssayDefinition assay)
+        {
+            switch (assay.Name)
+            {
+                case "HIV-1/2-Qual-Ser/Pla":
+                    if (assay.Tests.Count == 1)
+                    {
+                        assay.Tests[0].Name = "HIV-1/2-Qual-Ser/Pla";
+                    }
+
+                    SetControls(assay, "HIV-1M/HIV-2 (+) C", "HIV-1O (+) C", "(-) C");
+                    break;
+
+                case "HIV-1/2-Qual-DBS":
+                    SetControls(assay, "HIV-1M/HIV-2 (+) C", "HIV-1O (+) C", "(-) C");
+                    break;
+
+                case "HIV-PSC":
+                    if (assay.SampleTypes.Count == 0)
+                    {
+                        assay.SampleTypes.Add(SampleType(
+                            "PSC", "PSEPC^Plasma Separation Card^99ROC", "850"));
+                    }
+
+                    break;
+
+                case "SARS-CoV-2 Duo":
+                    SetControls(assay, "SARS-CoV-2 H (+) C", "SARS-CoV-2 L (+) C", "(-) Ctrl");
+                    break;
+
+                case "SCoV2-FluA/B":
+                    assay.SampleTypes = new List<AssaySampleType>
+                    {
+                        SampleType("VIRAL TRANSPORT MEDIA", "VTM^Viral Transport Media^99ROC", "400"),
+                        SampleType("COBAS PCR MEDIA SWAB", "CPM^cobas PCR Media^99ROC", "400"),
+                    };
+                    assay.Targets = new List<AssayTarget>
+                    {
+                        Target("FluA", "FluA^FluA^99ROC", "POS", "NEG"),
+                        Target("SCoV2", "SCoV2^SCoV2^99ROC", "POS", "NEG"),
+                        Target("PanSarb", "PanSarb^PanSarb^99ROC", "POS", "NEG"),
+                        Target("FluB", "FluB^FluB^99ROC", "POS", "NEG"),
+                    };
+                    SetControls(assay, "SCoV2-FluA/B (+) C", "(-) Ctrl");
+                    break;
+
+                case "HPV-GT":
+                    assay.SampleTypes = HpvSampleTypes();
+                    assay.Targets = new List<AssayTarget>
+                    {
+                        Target("Other HR", "Other HR HPV^Other HR HPV^99ROC", "POS", "NEG"),
+                        Target("HPV 16", "HPV 16^HPV 16^99ROC", "POS", "NEG"),
+                        Target("HPV 18", "HPV 18^HPV 18^99ROC", "POS", "NEG"),
+                    };
+                    break;
+
+                case "HPV-HR":
+                    assay.SampleTypes = HpvSampleTypes();
+                    assay.Targets = new List<AssayTarget>
+                    {
+                        Target("HR HPV", "HR HPV^HR HPV^99ROC", "POS", "NEG"),
+                    };
+                    break;
+            }
+        }
+
+        private static List<AssaySampleType> HpvSampleTypes() => new()
+        {
+            SampleType("Cell Collection Medium PLUS", "CCM^Cell Collection Medium PLUS^99ROC", "400"),
+            SampleType("PRESERVCYT", "PCYT^preservCyt^99ROC", "400"),
+            SampleType("RCCM", "RCCM^RocheCellCollectionMedia^99ROC", "400"),
+            SampleType("Self, vaginal - RCCM/PC", "SVAG^self, vaginal - RCCM/PC^99ROC", "400"),
+            SampleType("Self, vaginal (for US only)", "SVAL^self, vaginal^99ROC", "400"),
+            SampleType("SUREPATH", "SPATH^SurePath^99ROC", "400"),
+        };
+
+        private static AssaySampleType SampleType(
+            string name,
+            string specimenType,
+            params string[] volumes) => new()
+            {
+                Name = name,
+                SpecimenType = specimenType,
+                VolumeMicroliters = volumes.FirstOrDefault() ?? string.Empty,
+                VolumeOptionsMicroliters = volumes.ToList(),
+            };
+
+        private static AssayTarget Target(
+            string name,
+            string observationIdentifier,
+            params string[] codes)
+        {
+            var target = new AssayTarget
+            {
+                Name = name,
+                ObservationIdentifier = observationIdentifier,
+            };
+            SetTargetResultCodes(target, codes);
+            return target;
+        }
+
+        private static void SetControls(AssayDefinition assay, params string[] names)
+        {
+            assay.ControlResults = names
+                .Select(n => new AssayControlResult
+                {
+                    Name = n,
+                    IsPositive = n.Contains("(+)", StringComparison.Ordinal),
+                })
+                .ToList();
+        }
+
         // --- Helpers --------------------------------------------------------
 
         /// <summary>
@@ -676,6 +801,13 @@ namespace RocheLIT.Him
 
             var start = startTag + afterTag.Length;
             var end = block.IndexOf(endMarker, start, StringComparison.OrdinalIgnoreCase);
+            if (end < 0 && endMarker.Contains("types", StringComparison.OrdinalIgnoreCase))
+            {
+                end = block.IndexOf(
+                    endMarker.Replace("types", "type", StringComparison.OrdinalIgnoreCase),
+                    start,
+                    StringComparison.OrdinalIgnoreCase);
+            }
             if (end < 0)
             {
                 end = block.Length;
@@ -691,6 +823,15 @@ namespace RocheLIT.Him
             // marks; keep the trailing token run that looks like a label.
             var cleaned = raw.Trim();
             cleaned = Regex.Replace(cleaned, @"^(?:/\s*\d+\s*)+", string.Empty).Trim();
+            while (true)
+            {
+                var before = cleaned;
+                cleaned = Regex.Replace(cleaned, @"^(?:s|y|a|A)\s+", string.Empty).Trim();
+                if (string.Equals(before, cleaned, StringComparison.Ordinal))
+                {
+                    break;
+                }
+            }
             // Drop a leading "y" block-marker glyph if it bled in.
             if (cleaned.StartsWith('y'))
             {
@@ -698,6 +839,27 @@ namespace RocheLIT.Him
             }
 
             return CollapseSpaces(cleaned);
+        }
+
+        private static string CleanAssayName(string raw)
+        {
+            var cleaned = CollapseSpaces(raw);
+            cleaned = Regex.Replace(
+                cleaned,
+                @"^Version\s+\d+(?:\.\d+)*\s+",
+                string.Empty,
+                RegexOptions.IgnoreCase).Trim();
+            cleaned = Regex.Replace(
+                cleaned,
+                @"^\d+\s+(?:Blood screening|Infectious disease|Sexual health / microbiology)\s+",
+                string.Empty,
+                RegexOptions.IgnoreCase).Trim();
+            cleaned = Regex.Replace(
+                cleaned,
+                @"^(?:Blood screening|Infectious disease|Sexual health / microbiology)\s+\d+\s+",
+                string.Empty,
+                RegexOptions.IgnoreCase).Trim();
+            return cleaned;
         }
 
         private static SampleNameParts ParseSampleName(string raw)
